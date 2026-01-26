@@ -7,6 +7,8 @@ export const config = {
     spaceId: process.env.SPACE_ID,
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    googleClientScope: process.env.GOOGLE_CLIENT_SCOPE,
+    googleClientScope: process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
+    googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
     appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
+    googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
 };

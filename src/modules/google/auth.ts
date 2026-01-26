@@ -18,10 +18,17 @@ export const verifyGoogleChatToken = async (req: Request, res: Response, next: N
     }
 
     try {
-        // Validate the token
+        const webhookUrl = `${config.appHost}/api/google/message`;
+
+        // Validate the token. Google Chat tokens can have either the Client ID,
+        // the Project Number, or the Webhook URL as audience.
         const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: config.googleClientId,
+            audience: [
+                config.googleClientId as string,
+                config.googleProjectNumber as string,
+                webhookUrl
+            ],
         });
 
         const payload = ticket.getPayload();

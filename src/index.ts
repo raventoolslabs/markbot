@@ -1,17 +1,40 @@
 import express from 'express';
+import path from 'path';
+import swaggerUi from 'swagger-ui-express';
+import morgan from 'morgan';
 import { config } from './config';
 import { baseRouter } from './routes';
+import { swaggerSpec, swaggerDocumentationOptions } from './swagger';
+import { errorHandler } from './middleware/errorHandler';
+import { chatService } from './modules/google/chatService';
 
 const app = express();
+
 app.use(express.json());
+
+// Assets
+app.use(express.static(path.join(__dirname, '../web/public')));
+
+// Logger
+app.use(morgan('[:method] :url - :status - :response-time ms'));
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerDocumentationOptions));
 
 // Routes
 app.use('/api', baseRouter);
 
+// Error Handler (must be after all routes)
+app.use(errorHandler);
+
 if (require.main === module) {
-    app.listen(config.port, () => {
-        console.log(`Server is running on port ${config.port}`);
-    });
+    (async () => {
+        // Check and refresh tokens before starting the server
+        await chatService.checkAndRefreshTokens();
+
+        app.listen(config.port, () => {
+            console.log(`Server is running on port ${config.port}`);
+        });
+    })();
 }
 
 export { app };
