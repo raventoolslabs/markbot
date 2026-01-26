@@ -18,6 +18,12 @@ app.use(express.static(path.join(__dirname, '../web/public')));
 // Logger
 app.use(morgan('[:method] :url - :status - :response-time ms'));
 
+// Serve specific favicons for Swagger UI (it requests them relative to /api/docs/)
+app.get('/api/docs/favicon-*.png', (req, res) => {
+    const filename = path.basename(req.path);
+    res.sendFile(path.join(__dirname, '../web/public/img', filename));
+});
+
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerDocumentationOptions));
 
 // Routes
@@ -28,8 +34,8 @@ app.use(errorHandler);
 
 if (require.main === module) {
     (async () => {
-        // Check and refresh tokens before starting the server
-        await chatService.checkAndRefreshTokens();
+        // Check and refresh tokens before starting the server, and start scheduler
+        chatService.startTokenRefreshManager();
 
         app.listen(config.port, () => {
             console.log(`Server is running on port ${config.port}`);
