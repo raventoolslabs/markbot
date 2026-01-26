@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { verifyGoogleChatToken } from './auth';
 import { messageHandler } from '../chat/messageHandler';
 import { chatService } from './chatService';
+import { logger } from '../../util/logger';
 
 const router = Router();
 
@@ -50,95 +51,74 @@ const router = Router();
  *                   type: string
  */
 router.get('/auth', (req, res) => {
-    const url = chatService.getAuthUrl();
-    res.redirect(url);
+  const url = chatService.getAuthUrl();
+  res.redirect(url);
 });
 
 router.post('/message', verifyGoogleChatToken, async (req: Request, res: Response) => {
-    const event = req.body;
+  const event = req.body;
 
-    //console.log('Received Google Chat event:', JSON.stringify(event, null, 2));
+  const chatData = event.chat || {};
+  let eventType = null;
 
-    // Support both flat event structure (MESSAGE) and nested structure (messagePayload)
-    const chatData = event.chat || {};
+  if (chatData.messagePayload) {
+    eventType = 'MESSAGE';
+  } else {
+    eventType = chatData.type;
+  }
 
-    console.log('chatData', chatData);
+  logger.info(`Received event type: ${eventType}`, 'GoogleRoutes');
 
-    let eventType = null;
+  if (eventType === 'MESSAGE') {
+    try {
+      // Extract message data focusing on messagePayload if available
+      const message = chatData.messagePayload?.message || event.message;
+      const space = chatData.messagePayload?.space || event.space;
 
-    if (chatData.messagePayload) {
-        eventType = 'MESSAGE';
-    } else {
-        eventType = chatData.type;
-    }
+      let text = message?.text || '';
 
-    console.log('eventType', eventType);
+      if (text.startsWith('@')) text = text.replace(/^@[^\s]+\s*/, '');
 
-    if (eventType === 'MESSAGE') {
+      const userName = message?.sender?.displayName;
+      const userId = message?.sender?.name;
+      const spaceId = space?.name;
 
+      logger.debug(
+        `Processing message from ${userName} (${userId}) in space ${spaceId}`,
+        'GoogleRoutes',
+      );
+
+      if (!text && !chatData.messagePayload) {
+        return res.json({});
+      }
+
+      // Use the centralized message handler
+      const response = await messageHandler.handleMessage({
+        text,
+        userName,
+        userId,
+        spaceId,
+        platform: 'google',
+      });
+
+      if (spaceId) {
+        logger.info(`Sending message back to space ${spaceId}`, 'GoogleRoutes');
         try {
-
-            // Extract message data focusing on messagePayload if available
-            const message = chatData.messagePayload?.message || event.message;
-            const space = chatData.messagePayload?.space || event.space;
-
-            let text = message?.text || '';
-
-            if (text.startsWith('@')) text = text.replace(/^@[^\s]+\s*/, '');
-
-            const userName = message?.sender?.displayName;
-            const userId = message?.sender?.name;
-            const spaceId = space?.name;
-
-            console.log('text', text);
-            console.log('userName', userName);
-            console.log('userId', userId);
-            console.log('spaceId', spaceId);
-            console.log('chatData', chatData.messagePayload);
-
-            if (!text && !chatData.messagePayload) {
-                // If it's a message event but no text or payload, it might be a different subtype we don't handle yet
-                return res.json({});
-            }
-
-            console.log('estoy aqui');
-
-            // Use the centralized message handler
-            const response = await messageHandler.handleMessage({
-                text,
-                userName,
-                userId,
-                spaceId,
-                platform: 'google',
-            });
-
-            // Send message back via Google Chat API
-            // Note: This requires an authorized OAuth2 client with access token, which is not currently implemented.
-            // Since we are replying synchronously via res.json below, this call is redundant and currently causes an error.
-
-            if (spaceId) {
-                console.log(`Sending message to space ${spaceId} via ChatService...`);
-                try {
-                    await chatService.sendMessage(spaceId, response.text);
-                    console.log('Message sent successfully via ChatService');
-                } catch (sendError) {
-                    console.error('Error sending message via ChatService:', sendError);
-                }
-            }
-
-
-            res.json({});
-        } catch (error) {
-            console.error('Error processing Google message:', error);
-            // Even if there is an error, we might not want to show it to the user in the chat directly 
-            // if we are in async mode, but for now let's keep it simple.
-            res.json({});
+          await chatService.sendMessage(spaceId, response.text);
+        } catch (sendError) {
+          logger.error(`Error sending message via ChatService`, 'GoogleRoutes', sendError);
         }
-    } else {
-        // Other event types (ADDED_TO_SPACE, REMOVED_FROM_SPACE, etc.)
-        console.log(`Unhandled event type: ${eventType}`);
-        res.json({});
+      }
+
+      res.json({});
+    } catch (error) {
+      logger.error('Error processing Google message', 'GoogleRoutes', error);
+      res.json({});
     }
+  } else {
+    logger.debug(`Unhandled event type: ${eventType}`, 'GoogleRoutes');
+    res.json({});
+  }
 });
 
 /**
@@ -165,19 +145,20 @@ router.post('/message', verifyGoogleChatToken, async (req: Request, res: Respons
  *         description: Authentication failed
  */
 router.get('/oauth2/callback', async (req, res) => {
-    const { code } = req.query;
+  const { code } = req.query;
 
-    if (!code || typeof code !== 'string') {
-        return res.status(400).send('Missing code');
-    }
+  if (!code || typeof code !== 'string') {
+    return res.status(400).send('Missing code');
+  }
 
-    try {
-        await chatService.getToken(code);
-        res.send('Authentication successful! You can now close this window.');
-    } catch (error) {
-        console.error('Error getting token:', error);
-        res.status(500).send('Authentication failed');
-    }
+  try {
+    await chatService.getToken(code);
+    logger.info('OAuth callback successful', 'GoogleRoutes');
+    res.send('Authentication successful! You can now close this window.');
+  } catch (error) {
+    logger.error('Error getting token via callback', 'GoogleRoutes', error);
+    res.status(500).send('Authentication failed');
+  }
 });
 
 export const googleRouter = router;

@@ -6,34 +6,34 @@ const pkgPath = path.join(__dirname, '../package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
 
 const options: swaggerJSDoc.Options = {
-    swaggerDefinition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Markbot API',
-            version: pkg.version,
-            description: 'API documentation for Markbot backend service',
-        },
-        servers: [
-            {
-                url: '/api',
-                description: 'Markbot API',
-            },
-        ],
-        tags: [
-            { name: 'General', description: 'General API endpoints' },
-            { name: 'Chat', description: 'Chat interaction endpoints' },
-            { name: 'Google', description: 'Google Workspace integration endpoints' }
-        ]
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Markbot API',
+      version: pkg.version,
+      description: 'API documentation for Markbot backend service',
     },
-    apis: ['./src/routes.ts', './src/modules/**/*.ts'], // Path to the API docs
+    servers: [
+      {
+        url: '/api',
+        description: 'Markbot API',
+      },
+    ],
+    tags: [
+      { name: 'General', description: 'General API endpoints' },
+      { name: 'Chat', description: 'Chat interaction endpoints' },
+      { name: 'Google', description: 'Google Workspace integration endpoints' },
+    ],
+  },
+  apis: ['./src/routes.ts', './src/modules/**/*.ts'], // Path to the API docs
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
 
 export const swaggerDocumentationOptions = {
-    customSiteTitle: "Markbot API Docs",
-    customFavIcon: "/img/favicon.ico",
-    customCss: `
+  customSiteTitle: 'Markbot API Docs',
+  customFavIcon: '/img/favicon.ico',
+  customCss: `
         /* Base (Light Theme) - Default */
         body, .swagger-ui { background-color: #ffffff !important; color: #171717 !important; }
         .swagger-ui .info .title, .swagger-ui .info h1, .swagger-ui .info h2, .swagger-ui .info h3, .swagger-ui .info h4, .swagger-ui .info h5 { color: #171717 !important; }
@@ -96,5 +96,5 @@ export const swaggerDocumentationOptions = {
 
         html.dark-mode .swagger-ui .btn.authorize { color: #a3e635 !important; border-color: #a3e635 !important; }
         html.dark-mode .swagger-ui .btn.authorize svg { fill: #a3e635 !important; }
-    `
+    `,
 };

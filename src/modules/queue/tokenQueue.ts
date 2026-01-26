@@ -1,94 +1,132 @@
 import { Queue, Worker, Job } from 'bullmq';
+import Redis from 'ioredis';
 import { config } from '../../config';
+import { logger } from '../../util/logger';
 
 type RefreshHandler = () => Promise<number>; // Returns next expiry timestamp (ms)
 
 export class TokenQueueManager {
-    private queue: Queue;
-    private worker: Worker;
-    private handlers: Map<string, RefreshHandler> = new Map();
+  private queue: Queue;
+  private worker: Worker;
+  private redis: Redis;
+  private handlers: Map<string, RefreshHandler> = new Map();
 
-    constructor() {
-        const connection = {
-            host: config.redisHost,
-            port: config.redisPort
-        };
+  constructor() {
+    const connection = {
+      host: config.redisHost,
+      port: config.redisPort,
+    };
 
-        this.queue = new Queue('token-refresh', { connection });
+    this.redis = new Redis(connection);
+    this.queue = new Queue('token-refresh', { connection });
 
-        this.worker = new Worker('token-refresh', async (job: Job) => {
-            const { provider } = job.data;
-            console.log(`[TokenQueue] Processing refresh for provider: ${provider}`);
+    this.worker = new Worker(
+      'token-refresh',
+      async (job: Job) => {
+        const { provider } = job.data;
+        logger.info(`Processing refresh for provider: ${provider}`, 'TokenQueue');
 
-            const handler = this.handlers.get(provider);
-            if (!handler) {
-                console.error(`[TokenQueue] No handler registered for provider: ${provider}`);
-                throw new Error(`No handler for provider ${provider}`);
-            }
-
-            try {
-                // Execute handler and get next expiry time
-                const nextExpiry = await handler();
-                this.scheduleNextRefresh(provider, nextExpiry);
-            } catch (error) {
-                console.error(`[TokenQueue] Error refreshing token for ${provider}:`, error);
-                // Optionally re-throw to let BullMQ handle retries, 
-                // or handle gracefully. For now, let's stop scheduling to avoid loops if persistent error.
-                throw error;
-            }
-        }, { connection });
-
-        this.worker.on('completed', (job) => {
-            console.log(`[TokenQueue] Job ${job.id} completed for ${job.data.provider}`);
-        });
-
-        this.worker.on('failed', (job, err) => {
-            console.error(`[TokenQueue] Job ${job?.id} failed:`, err);
-        });
-
-        console.log('[TokenQueue] Initialized Queue and Worker');
-    }
-
-    registerHandler(provider: string, handler: RefreshHandler) {
-        this.handlers.set(provider, handler);
-        console.log(`[TokenQueue] Registered handler for: ${provider}`);
-    }
-
-    async scheduleNextRefresh(provider: string, expiryDate: number) {
-        const now = Date.now();
-        const timeToExpiry = expiryDate - now;
-
-        // Refresh 5 minutes before expiry
-        const refreshBuffer = 5 * 60 * 1000;
-        let delay = timeToExpiry - refreshBuffer;
-
-        if (delay <= 0) {
-            console.log(`[TokenQueue] Token for ${provider} is expired or close to expiry. Scheduling immediate refresh.`);
-            delay = 1000;
+        const handler = this.handlers.get(provider);
+        if (!handler) {
+          logger.error(`No handler registered for provider: ${provider}`, 'TokenQueue');
+          throw new Error(`No handler for provider ${provider}`);
         }
 
-        console.log(`[TokenQueue] Scheduling next refresh for ${provider} in ${Math.round(delay / 1000)}s`);
+        try {
+          // Execute handler and get next expiry time
+          const nextExpiry = await handler();
+          this.scheduleNextRefresh(provider, nextExpiry);
+        } catch (error) {
+          logger.error(`Error refreshing token for ${provider}`, 'TokenQueue', error);
+          // Optionally re-throw to let BullMQ handle retries
+          throw error;
+        }
+      },
+      { connection },
+    );
 
-        // Remove existing delayed jobs for this provider to avoid duplicates/overlap? 
-        // BullMQ allows unique job IDs. We can use provider name as ID if we want only one active job per provider.
-        await this.queue.add('refresh-token', { provider }, {
-            delay,
-            jobId: `refresh-${provider}-${Date.now()}`, // Unique ID for every cycle
-            removeOnComplete: true,
-            removeOnFail: 100 // Keep last 100 failed jobs for inspection
-        });
+    this.worker.on('completed', (job) => {
+      logger.debug(`Job ${job.id} completed for ${job.data.provider}`, 'TokenQueue');
+    });
+
+    this.worker.on('failed', (job, err) => {
+      logger.error(`Job ${job?.id} failed`, 'TokenQueue', err);
+    });
+
+    logger.info('Initialized Queue and Worker', 'TokenQueue');
+  }
+
+  registerHandler(provider: string, handler: RefreshHandler) {
+    this.handlers.set(provider, handler);
+    logger.info(`Registered handler for: ${provider}`, 'TokenQueue');
+  }
+
+  async scheduleNextRefresh(provider: string, expiryDate: number) {
+    const now = Date.now();
+    const timeToExpiry = expiryDate - now;
+
+    // Refresh 5 minutes before expiry
+    const refreshBuffer = 5 * 60 * 1000;
+    let delay = timeToExpiry - refreshBuffer;
+
+    if (delay <= 0) {
+      logger.info(
+        `Token for ${provider} is expired or close to expiry. Scheduling immediate refresh.`,
+        'TokenQueue',
+      );
+      delay = 1000;
     }
 
-    async bootstrapRefresh(provider: string) {
-        console.log(`[TokenQueue] Bootstrapping refresh for ${provider}...`);
-        // Just trigger the logic immediately (or check current state)
-        // We can add a specialized job with 0 delay, or call logic directly?
-        // Let's add an immediate job to check/refresh and set the cycle.
-        await this.queue.add('refresh-token', { provider }, {
-            jobId: `bootstrap-${provider}-${Date.now()}`,
-            removeOnComplete: true
-        });
+    logger.info(
+      `Scheduling next refresh for ${provider} in ${Math.round(delay / 1000)}s`,
+      'TokenQueue',
+    );
+
+    await this.queue.add(
+      'refresh-token',
+      { provider },
+      {
+        delay,
+        jobId: `refresh-${provider}-${Date.now()}`, // Unique ID for every cycle
+        removeOnComplete: true,
+        removeOnFail: 100, // Keep last 100 failed jobs for inspection
+      },
+    );
+  }
+
+  async bootstrapRefresh(provider: string) {
+    logger.info(`Bootstrapping refresh for ${provider}...`, 'TokenQueue');
+    await this.queue.add(
+      'refresh-token',
+      { provider },
+      {
+        jobId: `bootstrap-${provider}-${Date.now()}`,
+        removeOnComplete: true,
+      },
+    );
+  }
+
+  // Redis KV Storage methods
+  async setToken(provider: string, tokenData: any): Promise<void> {
+    const key = `token:${provider}`;
+    await this.redis.set(key, JSON.stringify(tokenData));
+    logger.debug(`Token preserved in Redis for ${provider}`, 'TokenQueue');
+  }
+
+  async getToken(provider: string): Promise<any | null> {
+    const key = `token:${provider}`;
+    const data = await this.redis.get(key);
+    if (data) {
+      return JSON.parse(data);
     }
+    return null;
+  }
+
+  async deleteToken(provider: string): Promise<void> {
+    const key = `token:${provider}`;
+    await this.redis.del(key);
+    logger.debug(`Token deleted from Redis for ${provider}`, 'TokenQueue');
+  }
 }
 
 export const tokenQueueManager = new TokenQueueManager();

@@ -1,138 +1,150 @@
 import { OAuth2Client } from 'google-auth-library';
 import { config } from '../../config';
-
 import { tokenQueueManager } from '../queue/tokenQueue';
+import { logger } from '../../util/logger';
 
 export class ChatService {
-    private client: OAuth2Client;
+  private client: OAuth2Client;
+  private initialized: boolean = false;
 
-    constructor() {
-        this.client = new OAuth2Client(
-            config.googleClientId,
-            config.googleClientSecret,
-            `${config.appHost}/api/google/oauth2/callback`
-        );
+  constructor() {
+    this.client = new OAuth2Client(
+      config.googleClientId,
+      config.googleClientSecret,
+      `${config.appHost}/api/google/oauth2/callback`,
+    );
 
-        this.client.on('tokens', (tokens) => {
-            console.log('Tokens refreshed via event');
-            this.saveTokens(tokens);
-        });
+    this.client.on('tokens', (tokens) => {
+      logger.info('Tokens refreshed via event', 'ChatService');
+      this.saveTokens(tokens);
+    });
 
-        if (config.googleClientToken) {
-            try {
-                const tokens = JSON.parse(config.googleClientToken);
-                this.client.setCredentials(tokens);
-                console.log('Google Chat credentials loaded from config');
-            } catch (error) {
-                console.error('Error parsing Google Chat token from config:', error);
-            }
-        }
+    // Register with Generic Queue Manager
+    tokenQueueManager.registerHandler('google', async () => {
+      logger.debug('Queue requested token refresh/check', 'ChatService');
+      await this.checkAndRefreshTokens();
 
-        // Register with Generic Queue Manager
-        tokenQueueManager.registerHandler('google', async () => {
-            console.log('[ChatService] Queue requested token refresh/check');
-            await this.checkAndRefreshTokens();
+      // Return next expiry date
+      const credentials = this.client.credentials;
+      if (credentials && credentials.expiry_date) {
+        return credentials.expiry_date;
+      } else {
+        // If no expiry, assume 1 hour to re-check
+        return Date.now() + 3600 * 1000;
+      }
+    });
+  }
 
-            // Return next expiry date
-            const credentials = this.client.credentials;
-            if (credentials && credentials.expiry_date) {
-                return credentials.expiry_date;
-            } else {
-                // If no expiry, maybe check again in 1 hour? Or throw?
-                // If we have a token but no expiry, it's valid indefinitely or we don't know?
-                // Let's assume 1 hour to re-check if it gets one.
-                return Date.now() + 3600 * 1000;
-            }
-        });
-    }
+  async initialize() {
+    if (this.initialized) return;
 
-    private saveTokens(tokens: any) {
-        // Update in-memory config
-        // Merge with existing credentials/tokens to keep fields like refresh_token if new one doesn't have it
-        const tokenString = JSON.stringify(tokens);
-        config.googleClientToken = tokenString;
-        console.log('Tokens updated in memory');
-    }
+    logger.info('Initializing ChatService with persistent tokens...', 'ChatService');
 
-    getAuthUrl(): string {
-        const scopes = config.googleClientScope;
-        console.log('scopes', scopes);
-        return this.client.generateAuthUrl({
-            access_type: 'offline',
-            scope: scopes,
-        });
-    }
+    // 1. Try to load from Redis first
+    const persistentToken = await tokenQueueManager.getToken('google');
 
-    async getToken(code: string) {
-        const { tokens } = await this.client.getToken(code);
+    if (persistentToken) {
+      this.client.setCredentials(persistentToken);
+      config.googleClientToken = JSON.stringify(persistentToken);
+      logger.info('Google Chat credentials loaded from Redis', 'ChatService');
+    } else if (config.googleClientToken) {
+      // 2. Fallback to config/env if Redis is empty (e.g. first run)
+      try {
+        const tokens = JSON.parse(config.googleClientToken);
         this.client.setCredentials(tokens);
-        this.saveTokens(tokens);
-        return tokens;
+        logger.info('Google Chat credentials loaded from config (fallback)', 'ChatService');
+
+        // Save it to Redis for next time
+        await this.saveTokens(tokens);
+      } catch (error) {
+        logger.error('Error parsing Google Chat token from config', 'ChatService', error);
+      }
+    } else {
+      logger.warn('No Google Chat credentials found in Redis or Config.', 'ChatService');
     }
 
-    private clearTokens() {
-        console.log('Clearing invalid/expired tokens...');
-        this.client.setCredentials({});
-        config.googleClientToken = undefined;
+    this.initialized = true;
+  }
 
-        try {
-            const envPath = path.resolve(process.cwd(), '.env');
-            if (fs.existsSync(envPath)) {
-                let envContent = fs.readFileSync(envPath, 'utf8');
-                const newEnvContent = envContent.replace(/^GOOGLE_CLIENT_TOKEN=.*$[\n\r]*/gm, '');
+  private async saveTokens(tokens: any) {
+    // Update in-memory config
+    const tokenString = JSON.stringify(tokens);
+    config.googleClientToken = tokenString;
 
-                if (envContent !== newEnvContent) {
-                    fs.writeFileSync(envPath, newEnvContent);
-                    console.log('Removed GOOGLE_CLIENT_TOKEN from .env');
-                }
-            }
-        } catch (error) {
-            console.error('Error removing token from .env:', error);
-        }
+    // Persist to Redis
+    await tokenQueueManager.setToken('google', tokens);
+    logger.debug('Tokens updated and persisted', 'ChatService');
+  }
+
+  getAuthUrl(): string {
+    const scopes = config.googleClientScope;
+    logger.debug(`Generating Auth URL with scopes: ${scopes}`, 'ChatService');
+    return this.client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+    });
+  }
+
+  async getToken(code: string) {
+    const { tokens } = await this.client.getToken(code);
+    this.client.setCredentials(tokens);
+    await this.saveTokens(tokens);
+    this.startTokenRefreshManager();
+    return tokens;
+  }
+
+  private async clearTokens() {
+    logger.warn('Clearing invalid/expired tokens...', 'ChatService');
+    this.client.setCredentials({});
+    config.googleClientToken = undefined;
+    await tokenQueueManager.deleteToken('google');
+  }
+
+  async checkAndRefreshTokens() {
+    // Ensure we are initialized before checking
+    if (!this.initialized) await this.initialize();
+
+    if (!config.googleClientToken) {
+      logger.warn('No Google Client Token found to refresh.', 'ChatService');
+      throw new Error('No token configured');
     }
 
-    async checkAndRefreshTokens() {
-        if (!config.googleClientToken) {
-            console.log('No Google Client Token found to refresh.');
-            throw new Error('No token configured'); // Throw so Queue knows it failed
-        }
+    try {
+      logger.debug('Checking Google Client Token...', 'ChatService');
+      await this.client.getAccessToken(); // Refresh if needed
+      logger.info('Google Client Token check complete.', 'ChatService');
+    } catch (error) {
+      logger.error('Error checking/refreshing Google Client Token', 'ChatService', error);
+      await this.clearTokens();
+      throw error;
+    }
+  }
 
-        try {
-            console.log('Checking Google Client Token...');
-            await this.client.getAccessToken(); // Refresh if needed
-            console.log('Google Client Token check complete.');
-        } catch (error) {
-            console.error('Error checking/refreshing Google Client Token:', error);
-            this.clearTokens();
-            throw error; // Propagate error
-        }
+  startTokenRefreshManager() {
+    if (!config.googleClientToken) {
+      logger.warn('No Google Client Token configured. Manager not started.', 'ChatService');
+      return;
+    }
+    tokenQueueManager.bootstrapRefresh('google');
+  }
+
+  async sendMessage(spaceId: string, text: string): Promise<any> {
+    if (!spaceId) {
+      throw new Error('Space ID is required');
     }
 
-    startTokenRefreshManager() {
-        if (!config.googleClientToken) {
-            console.log('No Google Client Token configured. Manager not started.');
-            return;
-        }
-        tokenQueueManager.bootstrapRefresh('google');
-    }
+    const url = `https://chat.googleapis.com/v1/${spaceId}/messages`;
 
-    async sendMessage(spaceId: string, text: string): Promise<any> {
-        if (!spaceId) {
-            throw new Error('Space ID is required');
-        }
+    const response = await this.client.request({
+      url,
+      method: 'POST',
+      data: {
+        text: text,
+      },
+    });
 
-        const url = `https://chat.googleapis.com/v1/${spaceId}/messages`;
-
-        const response = await this.client.request({
-            url,
-            method: 'POST',
-            data: {
-                text: text
-            }
-        });
-
-        return response.data;
-    }
+    return response.data;
+  }
 }
 
 export const chatService = new ChatService();

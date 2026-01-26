@@ -47,30 +47,30 @@ const router = Router();
  *                   type: object
  */
 router.post('/message', async (req: Request, res: Response) => {
-    try {
-        const { message, userName, userId } = req.body;
+  try {
+    const { message, userName, userId } = req.body;
 
-        // Use the centralized message handler
-        const response = await messageHandler.handleMessage({
-            text: message || '',
-            userName,
-            userId,
-            platform: 'generic',
-        });
+    // Use the centralized message handler
+    const response = await messageHandler.handleMessage({
+      text: message || '',
+      userName,
+      userId,
+      platform: 'generic',
+    });
 
-        res.json({
-            response: response.text,
-            metadata: response.metadata,
-        });
-    } catch (error) {
-        const errorResponse = messageHandler.formatErrorResponse(
-            error instanceof Error ? error : new Error('Unknown error')
-        );
-        res.status(500).json({
-            error: errorResponse.text,
-            metadata: errorResponse.metadata,
-        });
-    }
+    res.json({
+      response: response.text,
+      metadata: response.metadata,
+    });
+  } catch (error) {
+    const errorResponse = messageHandler.formatErrorResponse(
+      error instanceof Error ? error : new Error('Unknown error'),
+    );
+    res.status(500).json({
+      error: errorResponse.text,
+      metadata: errorResponse.metadata,
+    });
+  }
 });
 
 export const chatRouter = router;

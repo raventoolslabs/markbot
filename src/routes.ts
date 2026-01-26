@@ -24,9 +24,9 @@ const router = Router();
  *                   type: string
  */
 router.get('/version', (req, res) => {
-    const pkgPath = path.join(__dirname, '../package.json');
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    res.json({ version: pkg.version });
+  const pkgPath = path.join(__dirname, '../package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  res.json({ version: pkg.version });
 });
 
 /**
@@ -51,7 +51,7 @@ router.get('/version', (req, res) => {
  */
 // Health check
 router.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 router.use('/google', googleRouter);
