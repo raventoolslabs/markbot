@@ -87,7 +87,7 @@ export class TokenQueueManager {
       { provider },
       {
         delay,
-        jobId: `refresh-${provider}-${Date.now()}`, // Unique ID for every cycle
+        jobId: `refresh-${provider}`, // Deterministic ID to prevent duplicates
         removeOnComplete: true,
         removeOnFail: 100, // Keep last 100 failed jobs for inspection
       },
@@ -100,7 +100,7 @@ export class TokenQueueManager {
       'refresh-token',
       { provider },
       {
-        jobId: `bootstrap-${provider}-${Date.now()}`,
+        jobId: `refresh-${provider}`, // Use the same deterministic ID
         removeOnComplete: true,
       },
     );

@@ -15,4 +15,12 @@ export const config = {
   redisHost: process.env.REDIS_HOST || 'localhost',
   redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Database
+  dbHost: process.env.DB_HOST || 'localhost',
+  dbPort: parseInt(process.env.DB_PORT || '5432', 10),
+  dbUser: process.env.DB_USER || 'markbot_user',
+  dbPassword: process.env.DB_PASSWORD || 'markbot_password',
+  dbName: process.env.DB_NAME || 'markbot_vector',
+  // Vectorization
+  openaiApiKey: process.env.OPENAI_API_KEY,
 };

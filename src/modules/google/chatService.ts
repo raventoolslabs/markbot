@@ -105,8 +105,8 @@ export class ChatService {
     if (!this.initialized) await this.initialize();
 
     if (!config.googleClientToken) {
-      logger.warn('No Google Client Token found to refresh.', 'ChatService');
-      throw new Error('No token configured');
+      logger.warn('No Google Client Token found to refresh. Skipping cycle.', 'ChatService');
+      return;
     }
 
     try {

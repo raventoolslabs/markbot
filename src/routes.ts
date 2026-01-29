@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { googleRouter } from './modules/google/routes';
 import { chatRouter } from './modules/chat/routes';
+import { vectorRouter } from './modules/vector/routes';
 
 const router = Router();
 
@@ -56,5 +57,6 @@ router.get('/health', (req, res) => {
 
 router.use('/google', googleRouter);
 router.use('/chat', chatRouter);
+router.use('/vector', vectorRouter);
 
 export const baseRouter = router;

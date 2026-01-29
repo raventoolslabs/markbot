@@ -7,6 +7,7 @@ import { baseRouter } from './routes';
 import { swaggerSpec, swaggerDocumentationOptions } from './swagger';
 import { errorHandler } from './middleware/errorHandler';
 import { chatService } from './modules/google/chatService';
+import { vectorDb } from './modules/vector/db';
 
 import { logger } from './util/logger';
 
@@ -67,6 +68,9 @@ app.use(errorHandler);
 
 if (require.main === module) {
   (async () => {
+    // Initialize Vector Database
+    await vectorDb.initialize();
+
     // Initialize ChatService (load tokens from Redis/Config)
     await chatService.initialize();
 

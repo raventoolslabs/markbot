@@ -1,3 +1,7 @@
+import { aiService } from '../ai/aiService';
+import { vectorService } from '../vector/service';
+import { logger } from '../../util/logger';
+
 export interface MessageContext {
   text: string;
   userId?: string;
@@ -39,15 +43,41 @@ export class MessageHandler {
       return this.getInfoResponse(platform);
     }
 
-    // Default echo response with enhancement
-    const greeting = userName ? `Hola ${userName}` : 'Hola';
-    return {
-      text: `${greeting}, recibí tu mensaje: "${text}"`,
-      metadata: {
-        processedAt: new Date().toISOString(),
-        platform: platform || 'unknown',
-      },
-    };
+    // Default: Perform semantic search and generate AI response
+    try {
+      logger.info(`Searching context for: "${text}"`, 'MessageHandler');
+      const searchResults = await vectorService.search(text, 3);
+
+      const contextStrings = searchResults.map((res: any) => res.content);
+
+      if (contextStrings.length > 0) {
+        logger.info(`Found ${contextStrings.length} relevant chunks. Generating AI response...`, 'MessageHandler');
+        const aiResponse = await aiService.generateResponse(text, contextStrings);
+        return {
+          text: aiResponse,
+          metadata: {
+            source: 'vector-search',
+            resultsCount: contextStrings.length,
+          }
+        };
+      }
+
+      // If no context found, fallback to default or generic AI response
+      const greeting = userName ? `Hola ${userName}` : 'Hola';
+      return {
+        text: `${greeting}, no encontré información específica en mis documentos sobre eso, pero recibí tu mensaje: "${text}"`,
+        metadata: {
+          processedAt: new Date().toISOString(),
+          platform: platform || 'unknown',
+          source: 'echo-fallback'
+        },
+      };
+    } catch (error) {
+      logger.error('Error in message handler flow', 'MessageHandler', error);
+      return {
+        text: 'Lo siento, tuve un problema al consultar mi base de datos de conocimientos.',
+      };
+    }
   }
 
   /**
