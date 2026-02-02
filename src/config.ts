@@ -21,6 +21,8 @@ export const config = {
   dbUser: process.env.DB_USER || 'markbot_user',
   dbPassword: process.env.DB_PASSWORD || 'markbot_password',
   dbName: process.env.DB_NAME || 'markbot_vector',
+  dbSchema: process.env.DB_SCHEMA || 'markbot',
+  databaseUrl: process.env.DATABASE_URL,
   // Vectorization
   openaiApiKey: process.env.OPENAI_API_KEY,
 };

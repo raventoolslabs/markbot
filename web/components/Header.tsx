@@ -22,6 +22,9 @@ export const Header = () => {
                 <Link href="/chat" className="hover:text-white transition-colors font-semibold text-white/90">
                     {t.nav.chat}
                 </Link>
+                <Link href="/documents" className="hover:text-white transition-colors font-semibold text-white/90">
+                    {t.nav.documents}
+                </Link>
             </nav>
 
             <div className="ml-auto flex items-center gap-1 sm:gap-2 text-white">

@@ -82,4 +82,83 @@ router.post('/search', async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * @openapi
+ * /vector/documents:
+ *   get:
+ *     summary: List all uploaded documents
+ *     tags: [Vector]
+ *     responses:
+ *       200:
+ *         description: List of documents
+ */
+router.get('/documents', async (req: Request, res: Response) => {
+    try {
+        const documents = await vectorService.listDocuments();
+        res.json(documents);
+    } catch (error: any) {
+        logger.error('Error listing documents', 'VectorRoutes', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * @openapi
+ * /vector/documents/{id}:
+ *   get:
+ *     summary: Get document details and chunks
+ *     tags: [Vector]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Document details
+ *       404:
+ *         description: Document not found
+ */
+router.get('/documents/:id', async (req: Request, res: Response) => {
+    try {
+        const document = await vectorService.getDocument(req.params.id);
+        if (!document) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+        res.json(document);
+    } catch (error: any) {
+        logger.error('Error getting document', 'VectorRoutes', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * @openapi
+ * /vector/documents/{id}:
+ *   delete:
+ *     summary: Delete a document and its chunks
+ *     tags: [Vector]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Document deleted
+ *       500:
+ *         description: Server error
+ */
+router.delete('/documents/:id', async (req: Request, res: Response) => {
+    try {
+        await vectorService.deleteDocument(req.params.id);
+        res.json({ success: true, message: 'Document deleted successfully' });
+    } catch (error: any) {
+        logger.error(`Error deleting document: ${error.message}`, 'VectorRoutes');
+        res.status(500).json({ error: 'Failed to delete document' });
+    }
+});
+
 export const vectorRouter = router;
