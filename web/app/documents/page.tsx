@@ -36,7 +36,7 @@ export default function DocumentsPage() {
     const fetchDocuments = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/vector/documents');
+            const response = await fetch('/api/document/list');
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
@@ -63,7 +63,7 @@ export default function DocumentsPage() {
 
         setIsDeleting(true);
         try {
-            const response = await fetch(`/api/vector/documents/${documentToDelete.id}`, {
+            const response = await fetch(`/api/document/${documentToDelete.id}`, {
                 method: 'DELETE',
             });
 

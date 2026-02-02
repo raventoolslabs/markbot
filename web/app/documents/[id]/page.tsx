@@ -39,7 +39,7 @@ export default function DocumentDetailPage() {
 
     const fetchDocument = async (id: string) => {
         try {
-            const response = await fetch(`/api/vector/documents/${id}`);
+            const response = await fetch(`/api/document/${id}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch document details');
             }

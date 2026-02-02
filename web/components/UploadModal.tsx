@@ -38,7 +38,7 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
         formData.append('file', file);
 
         try {
-            const response = await fetch('/api/vector/upload', {
+            const response = await fetch('/api/document', {
                 method: 'POST',
                 body: formData,
             });

@@ -2,13 +2,13 @@
     "name": "markbot",
     "version": "1.0.0",
     "description": "Bot para interactuar con proyecto Markdown",
-    "main": "dist/index.js",
+    "main": "dist/app/index.js",
     "scripts": {
-        "start": "PORT=3002 NODE_OPTIONS='--no-deprecation' node dist/index.js & npm start --prefix web",
-        "server": "PORT=3002 NODE_OPTIONS='--no-deprecation' nodemon --watch src src/index.ts",
+        "start": "PORT=3002 NODE_OPTIONS='--no-deprecation' node dist/app/index.js & npm start --prefix web",
+        "server": "PORT=3002 NODE_OPTIONS='--no-deprecation' nodemon --watch src -r tsconfig-paths/register src/app/index.ts",
         "client": "npm run dev --prefix web",
         "dev": "concurrently --hide 1,2 --prefix none --kill-others --handle-input \"npm run server\" \"npm run client\" \"lt --port 3002 --subdomain markbot\"",
-        "build": "tsc && cp -r src/scripts/sql dist/scripts/ && npm run build --prefix web",
+        "build": "tsc && mkdir -p dist/infrastructure/db/scripts && cp -r src/infrastructure/db/scripts/sql dist/infrastructure/db/scripts/ && npm run build --prefix web",
         "test": "jest",
         "lint": "eslint \"src/**/*.ts\"",
         "format": "prettier --write \"src/**/*.ts\""
@@ -59,6 +59,7 @@
         "supertest": "^7.2.2",
         "ts-jest": "^29.4.6",
         "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.4.3"
     },
     "overrides": {
