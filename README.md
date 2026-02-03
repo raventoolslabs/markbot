@@ -12,15 +12,6 @@ Este proyecto consiste en un backend desarrollado en Node.js/Express y un fronte
 - Node.js (v18 o superior recomendado)
 - npm
 
-### Dependencias del Sistema (Debian/Ubuntu)
-Es necesario instalar las siguientes herramientas para el procesamiento de documentos (PDF a Markdown):
-```bash
-sudo apt-get update
-sudo apt-get install -y pandoc poppler-utils
-```
-- `pandoc`: Para conversión de documentos.
-- `poppler-utils`: Provee `pdftohtml` para extracción fiel de PDF.
-
 ## Configuración
 
 1. Instalación de dependencias:

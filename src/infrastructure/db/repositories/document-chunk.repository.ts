@@ -2,11 +2,14 @@ import { managerDb } from '@/infrastructure/db/client';
 import { sql } from 'kysely';
 
 export class DocumentChunkRepository {
-    async create(chunk: any) {
-        await managerDb.db.withSchema('markbot')
+    async create(chunk: any): Promise<{ id: number }> {
+        const result = await managerDb.db.withSchema('markbot')
             .insertInto('documentchunk')
             .values(chunk)
-            .execute();
+            .returning('id')
+            .executeTakeFirstOrThrow();
+
+        return { id: Number(result.id) };
     }
 
     async getByDocumentId(documentId: string) {
@@ -19,7 +22,7 @@ export class DocumentChunkRepository {
     }
 
     async search(vectorString: string, limit: number) {
-        return await managerDb.db.withSchema('markbot')
+        const results = await managerDb.db.withSchema('markbot')
             .selectFrom('documentchunk as c')
             .innerJoin('document as d', 'c.document_id', 'd.id')
             .select([
@@ -33,6 +36,22 @@ export class DocumentChunkRepository {
             .orderBy(sql`c.embedding <=> ${vectorString}::vector`)
             .limit(limit)
             .execute();
+
+        // Import the repository here to avoid circular dependencies
+        const { documentChunkAssetRepository } = await import('./documentchunk-asset.repository');
+
+        // Fetch assets for each chunk
+        const resultsWithAssets = await Promise.all(
+            results.map(async (row: any) => {
+                const assets = await documentChunkAssetRepository.getByChunkId(row.id);
+                return {
+                    ...row,
+                    assets
+                };
+            })
+        );
+
+        return resultsWithAssets;
     }
 }
 

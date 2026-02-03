@@ -51,18 +51,45 @@ export class ChatController {
       logger.info(`Searching context for: "${text}"`, 'MessageHandler');
       const searchResults = await documentController.search(text, 3);
 
-      const contextStrings = searchResults.map((res: any) => res.content);
+      // Extract both content and assets from search results
+      const contextData = searchResults.map((res: any) => ({
+        content: res.content,
+        assets: res.assets || []
+      }));
+
+      const contextStrings = contextData.map(d => d.content);
+
+      // Collect all images from all chunks
+      const allImages = contextData.flatMap(d =>
+        d.assets.filter((a: any) => a.asset_type === 'image')
+      );
 
       if (contextStrings.length > 0) {
-        logger.info(`Found ${contextStrings.length} relevant chunks. Generating AI response...`, 'MessageHandler');
+        logger.info(
+          `Found ${contextStrings.length} relevant chunks with ${allImages.length} images.`,
+          'MessageHandler'
+        );
         const aiResponse = await this.generateResponse(text, contextStrings);
-        return {
+
+        const response: ChatMessageResponseDto = {
           text: aiResponse,
           metadata: {
             source: 'vector-search',
             resultsCount: contextStrings.length,
+            imagesCount: allImages.length
           }
         };
+
+        // Include images if any were found
+        if (allImages.length > 0) {
+          response.images = allImages.map((img: any) => ({
+            name: img.asset_name,
+            mimeType: img.mime_type,
+            data: img.content // base64
+          }));
+        }
+
+        return response;
       }
 
       // If no context found, fallback to default or generic AI response
@@ -128,6 +155,16 @@ export class ChatController {
         Eres MarkBot, un asistente inteligente y útil.
         Utiliza el siguiente contexto recuperado para responder a la pregunta del usuario.
         Si la información no está en el contexto, dí que no lo sabes basándote en los documentos, pero intenta ser de ayuda.
+        
+        IMPORTANTE: 
+        - Formatea tu respuesta usando Markdown para mejor legibilidad.
+        - Usa **negrita** para términos importantes y listas para enumeraciones.
+        - El contexto puede contener referencias a imágenes en el formato \`![][nombre_imagen]\`.
+        - CUANDO uses información de un fragmento que tiene una imagen, DEBES incluir la imagen visualmente en tu respuesta.
+        - Para incluir la imagen, usa EXACTAMENTE este formato Markdown: \`![nombre_imagen](nombre_imagen)\`.
+        - Inserta la imagen JUSTO DESPUÉS del párrafo relevante, para no perder el contexto.
+        - NO inventes nombres de imágenes, usa solo las que aparecen en el contexto como \`![][...]\`.
+        
         Contexto:
         ${context.join('\n---\n')}
       `;

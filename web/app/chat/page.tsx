@@ -2,12 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import ReactMarkdown from 'react-markdown';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
 
 type Message = {
     role: 'user' | 'bot';
     content: string;
+    images?: Array<{
+        name: string;
+        mimeType: string;
+        data: string; // base64
+    }>;
 };
 
 export default function ChatPage() {
@@ -59,7 +65,11 @@ export default function ChatPage() {
             const data = await res.json();
 
             // Handle metadata if present (compatible with new messageHandler response)
-            const botMessage: Message = { role: 'bot', content: data.response || data.text };
+            const botMessage: Message = {
+                role: 'bot',
+                content: data.response || data.text,
+                images: data.images || []
+            };
             setMessages(prev => [...prev, botMessage]);
         } catch (error) {
             console.error('Error sending message:', error);
@@ -101,7 +111,49 @@ export default function ChatPage() {
                             ? 'bg-emerald-800 text-white rounded-2xl rounded-tr-sm'
                             : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-2xl rounded-tl-sm border border-emerald-100 dark:border-gray-800'
                             }`}>
-                            <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
+                            {msg.role === 'bot' ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:mt-3 prose-headings:mb-2 prose-li:my-0.5">
+                                    <ReactMarkdown
+                                        components={{
+                                            img: ({ src, alt }) => {
+                                                const imgData = msg.images?.find(i => i.name === src || i.name === alt);
+
+                                                if (imgData) {
+                                                    return (
+                                                        <div className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col items-center">
+                                                            <a
+                                                                href={`data:${imgData.mimeType};base64,${imgData.data}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="block hover:opacity-90 transition-opacity w-full flex justify-center p-4 bg-gray-50/50 dark:bg-gray-900/50"
+                                                                title={`Click to open ${imgData.name} in full size`}
+                                                            >
+                                                                <img
+                                                                    src={`data:${imgData.mimeType};base64,${imgData.data}`}
+                                                                    alt={imgData.name}
+                                                                    className="max-w-full h-auto object-contain shadow-sm rounded-sm"
+                                                                    loading="lazy"
+                                                                    style={{
+                                                                        maxHeight: '600px'
+                                                                    }}
+                                                                />
+                                                            </a>
+                                                            <div className="w-full px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center font-medium truncate">
+                                                                📎 {imgData.name}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return <span className="text-gray-400 italic text-xs">[Image: {String(alt || src || '')}]</span>;
+                                            }
+                                        }}
+                                    >
+                                        {msg.content}
+                                    </ReactMarkdown>
+                                </div>
+                            ) : (
+                                <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
+                            )}
                         </div>
 
                         {msg.role === 'user' && (

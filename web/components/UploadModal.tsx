@@ -77,20 +77,22 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t.upload.selectLabel}
+                        {t.upload.selectLabel.replace('PDF o ', '')}
                     </label>
                     <input
                         type="file"
-                        accept=".pdf,.md"
+                        accept=".md"
                         onChange={handleFileChange}
                         ref={fileInputRef}
                         className="block w-full text-sm text-gray-500
               file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
+              file:rounded-md file:border-0
               file:text-sm file:font-semibold
-              file:bg-emerald-50 file:text-emerald-700
-              hover:file:bg-emerald-100
-              dark:file:bg-gray-700 dark:file:text-gray-300
+              file:bg-emerald-600 file:text-white
+              hover:file:bg-emerald-700
+              file:transition-colors file:duration-200
+              file:cursor-pointer
+              dark:file:bg-emerald-600 dark:file:hover:bg-emerald-700
             "
                     />
                 </div>

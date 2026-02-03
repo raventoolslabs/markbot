@@ -133,13 +133,18 @@ export default function DocumentDetailPage() {
                     {document.chunks?.map((chunk, index) => (
                         <div key={chunk.id} className="border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm bg-white dark:bg-gray-900 hover:shadow-md transition-shadow">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs font-bold px-2.5 py-1 rounded">
                                         {t.documents.chunk} #{index + 1}
                                     </span>
                                     {chunk.metadata?.page && (
                                         <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs font-medium px-2.5 py-1 rounded border border-gray-200 dark:border-gray-700">
                                             {t.documents.page} {chunk.metadata.page}
+                                        </span>
+                                    )}
+                                    {chunk.metadata?.chunk_size && (
+                                        <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 text-xs font-medium px-2.5 py-1 rounded border border-purple-200 dark:border-purple-700">
+                                            {chunk.metadata.chunk_size} chars
                                         </span>
                                     )}
                                 </div>

@@ -60,6 +60,8 @@ router.post('/message', async (req: Request, res: Response) => {
 
     res.json({
       response: response.text,
+      text: response.text, // For compatibility
+      images: response.images,
       metadata: response.metadata,
     });
   } catch (error) {

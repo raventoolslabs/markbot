@@ -4,6 +4,7 @@ export interface ChunkMetadataDto {
     section_path?: string[];
     page?: number;
     chunk?: number;
+    chunk_size?: number;
     content_hash?: string;
     [key: string]: any;
 }
