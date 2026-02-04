@@ -42,7 +42,7 @@ export const es = {
     },
     upload: {
         title: 'Subir Documento',
-        selectLabel: 'Selecciona archivo PDF o Markdown',
+        selectLabel: 'Selecciona archivo Markdown o ZIP',
         cancel: 'Cancelar',
         upload: 'Subir',
         uploading: 'Subiendo...',

@@ -421,7 +421,7 @@ export class VectorUtil {
 
         // For each chunk, find image references
         chunks.forEach((chunk, index) => {
-            const imageRefRegex = /!\[\]\[([^\]]+)\]/g;
+            const imageRefRegex = /!\[.*?\]\[([^\]]+)\]/g;
             let match;
 
             while ((match = imageRefRegex.exec(chunk.content)) !== null) {

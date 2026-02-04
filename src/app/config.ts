@@ -18,11 +18,17 @@ export const config = {
   // Database
   databaseUrl: process.env.DATABASE_URL,
   // Vectorization
-  openaiApiKey: process.env.OPENAI_API_KEY,
   vector: {
     maxChunkSize: parseInt(process.env.VECTOR_MAX_CHUNK_SIZE || '1000', 10),
     chunkOverlap: parseInt(process.env.VECTOR_CHUNK_OVERLAP || '100', 10),
     modelName: process.env.VECTOR_MODEL_NAME || 'Xenova/all-MiniLM-L6-v2',
     batchSize: parseInt(process.env.VECTOR_BATCH_SIZE || '10', 10),
+  },
+  chat: {
+    provider: process.env.CHAT_PROVIDER || 'openai', // 'openai' | 'ollama'
+    modelName: process.env.CHAT_MODEL_NAME || 'gpt-4o',
+    temperature: parseFloat(process.env.CHAT_TEMPERATURE || '0.7'),
+    apiKey: process.env.CHAT_API_KEY,
+    ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
   },
 };

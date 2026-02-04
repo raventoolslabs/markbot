@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -16,11 +17,17 @@ type Message = {
     }>;
 };
 
+type SelectedImage = {
+    src: string;
+    alt: string;
+} | null;
+
 export default function ChatPage() {
     const { t } = useLanguage();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<SelectedImage>(null);
     const mainRef = useRef<HTMLElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -88,7 +95,7 @@ export default function ChatPage() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-hidden">
+        <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-hidden relative">
             <Header />
 
             <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-5xl mx-auto w-full pb-8 scroll-smooth bg-emerald-50/20 dark:bg-transparent">
@@ -114,32 +121,30 @@ export default function ChatPage() {
                             {msg.role === 'bot' ? (
                                 <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:mt-3 prose-headings:mb-2 prose-li:my-0.5">
                                     <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
                                         components={{
                                             img: ({ src, alt }) => {
                                                 const imgData = msg.images?.find(i => i.name === src || i.name === alt);
 
                                                 if (imgData) {
+                                                    const imgSrc = `data:${imgData.mimeType};base64,${imgData.data}`;
                                                     return (
-                                                        <div className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col items-center">
-                                                            <a
-                                                                href={`data:${imgData.mimeType};base64,${imgData.data}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="block hover:opacity-90 transition-opacity w-full flex justify-center p-4 bg-gray-50/50 dark:bg-gray-900/50"
-                                                                title={`Click to open ${imgData.name} in full size`}
+                                                        <div className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col items-center group">
+                                                            <div
+                                                                onClick={() => setSelectedImage({ src: imgSrc, alt: imgData.name })}
+                                                                className="cursor-zoom-in w-full flex justify-center p-4 bg-gray-50/50 dark:bg-gray-900/50 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                                title={`Click to enlarge ${imgData.name}`}
                                                             >
                                                                 <img
-                                                                    src={`data:${imgData.mimeType};base64,${imgData.data}`}
+                                                                    src={imgSrc}
                                                                     alt={imgData.name}
-                                                                    className="max-w-full h-auto object-contain shadow-sm rounded-sm"
+                                                                    className="max-w-full h-auto object-contain shadow-sm rounded-sm max-h-[400px]"
                                                                     loading="lazy"
-                                                                    style={{
-                                                                        maxHeight: '600px'
-                                                                    }}
                                                                 />
-                                                            </a>
-                                                            <div className="w-full px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center font-medium truncate">
-                                                                📎 {imgData.name}
+                                                            </div>
+                                                            <div className="w-full px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center font-medium truncate flex items-center justify-center gap-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+                                                                {imgData.name}
                                                             </div>
                                                         </div>
                                                     );
@@ -178,6 +183,34 @@ export default function ChatPage() {
                 )}
             </main>
 
+            {/* Image Lighbox / Modal */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                    onClick={() => setSelectedImage(null)}
+                >
+                    <div
+                        className="relative max-w-full max-h-full flex flex-col items-center justify-center animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2 backdrop-blur-md"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                        <img
+                            src={selectedImage.src}
+                            alt={selectedImage.alt}
+                            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                        />
+                        <div className="mt-4 text-white text-sm font-medium bg-black/50 px-4 py-2 rounded-full backdrop-blur-md">
+                            {selectedImage.alt}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="p-4 bg-emerald-50/30 dark:bg-gray-950 z-10 transition-colors">
                 <form onSubmit={sendMessage} className="max-w-5xl mx-auto">
                     <div className="flex items-end gap-2 bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-gray-700 p-2 focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-all shadow-md">
@@ -213,3 +246,4 @@ export default function ChatPage() {
         </div>
     );
 }
+

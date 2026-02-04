@@ -1,4 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 import { documentController } from '@/api/http/controllers/document.controller';
@@ -10,15 +11,7 @@ import { ChatMessageResponseDto } from '@/api/http/types/ChatMessageResponseDto'
 
 export class ChatController {
 
-  private model: ChatOpenAI;
-
-  constructor() {
-    this.model = new ChatOpenAI({
-      openAIApiKey: config.openaiApiKey,
-      modelName: 'gpt-4o', // Or gpt-3.5-turbo
-      temperature: 0.7,
-    });
-  }
+  constructor() { }
 
   /**
    * Process incoming messages and generate appropriate responses
@@ -149,7 +142,10 @@ export class ChatController {
     };
   }
 
-  async generateResponse(query: string, context: string[]): Promise<string> {
+  async generateResponse(
+    query: string,
+    context: string[]
+  ): Promise<string> {
     try {
       const systemPrompt = `
         Eres MarkBot, un asistente inteligente y útil.
@@ -159,17 +155,41 @@ export class ChatController {
         IMPORTANTE: 
         - Formatea tu respuesta usando Markdown para mejor legibilidad.
         - Usa **negrita** para términos importantes y listas para enumeraciones.
-        - El contexto puede contener referencias a imágenes en el formato \`![][nombre_imagen]\`.
+        - El contexto puede contener referencias a imágenes en el formato \`![texto alternativo][nombre_imagen]\` o \`![][nombre_imagen]\`.
         - CUANDO uses información de un fragmento que tiene una imagen, DEBES incluir la imagen visualmente en tu respuesta.
         - Para incluir la imagen, usa EXACTAMENTE este formato Markdown: \`![nombre_imagen](nombre_imagen)\`.
         - Inserta la imagen JUSTO DESPUÉS del párrafo relevante, para no perder el contexto.
-        - NO inventes nombres de imágenes, usa solo las que aparecen en el contexto como \`![][...]\`.
+        - NO inventes nombres de imágenes, usa solo las que aparecen en el contexto como \`[nombre_imagen]\`.
         
         Contexto:
         ${context.join('\n---\n')}
       `;
 
-      const response = await this.model.invoke([
+      let llm;
+      // Use config values
+      const provider = config.chat.provider;
+      const temperature = config.chat.temperature;
+      const modelName = config.chat.modelName;
+
+      logger.info(`Provider: ${provider}`, 'MessageHandler');
+      logger.info(`Model Name: ${modelName}`, 'MessageHandler');
+      logger.info(`Temperature: ${temperature}`, 'MessageHandler');
+
+      if (provider === 'ollama') {
+        llm = new ChatOllama({
+          baseUrl: config.chat.ollamaBaseUrl,
+          model: modelName,
+          temperature: temperature,
+        });
+      } else {
+        llm = new ChatOpenAI({
+          openAIApiKey: config.chat.apiKey,
+          modelName: modelName,
+          temperature: temperature,
+        });
+      }
+
+      const response = await llm.invoke([
         new SystemMessage(systemPrompt),
         new HumanMessage(query),
       ]);

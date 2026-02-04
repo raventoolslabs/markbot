@@ -77,11 +77,11 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
                 <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t.upload.selectLabel.replace('PDF o ', '')}
+                        {t.upload.selectLabel}
                     </label>
                     <input
                         type="file"
-                        accept=".md"
+                        accept=".md,.zip,application/zip,application/x-zip-compressed"
                         onChange={handleFileChange}
                         ref={fileInputRef}
                         className="block w-full text-sm text-gray-500

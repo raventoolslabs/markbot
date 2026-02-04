@@ -5,6 +5,7 @@ import { documentRepository } from '@/infrastructure/db/repositories/document.re
 import { documentChunkRepository } from '@/infrastructure/db/repositories/document-chunk.repository';
 import { documentChunkAssetRepository } from '@/infrastructure/db/repositories/documentchunk-asset.repository';
 import { vectorUtil } from '@/infrastructure/utils/vector.util';
+import { zipUtil } from '@/infrastructure/utils/zip.util';
 
 export class DocumentController {
 
@@ -14,12 +15,63 @@ export class DocumentController {
 
     async processFile(buffer: Buffer, originalName: string, mimeType: string) {
 
+        // Check for ZIP file
+        if (mimeType === 'application/zip' || mimeType === 'application/x-zip-compressed' || originalName.toLowerCase().endsWith('.zip')) {
+            logger.info(`Processing ZIP file: ${originalName}`, 'DocumentController');
+
+            const processedFiles = await zipUtil.processZipContent(buffer);
+
+            if (processedFiles.length === 0) {
+                throw new Error('No valid markdown files found in the ZIP archive');
+            }
+
+            const results = [];
+
+            for (const file of processedFiles) {
+                try {
+                    // Create a pseudo-name combining zip name and inner file name
+                    // e.g., "archive.zip/guide.md" (or just "guide.md" if preferred, but existing logic might assume uniqueness)
+                    // Let's use "zipname/innername" to identify source clearly
+                    const compoundName = `${originalName}/${file.fileName}`;
+
+                    const result = await this.processSingleMarkdown(file.content, compoundName, 'text/markdown');
+                    results.push(result);
+                } catch (err) {
+                    logger.error(`Error processing file ${file.fileName} from zip: ${err}`, 'DocumentController');
+                    // Continue with other files
+                }
+            }
+
+            // Aggregate results
+            const totalChunks = results.reduce((sum, r) => sum + r.chunks, 0);
+            const totalAssets = results.reduce((sum, r) => sum + r.assets, 0);
+            const docIds = results.map(r => r.documentId);
+
+            logger.info(`ZIP processing complete. Documents: ${results.length}, Chunks: ${totalChunks}, Assets: ${totalAssets}`, 'DocumentController');
+
+            return {
+                type: 'zip',
+                documentsProcessed: results.length,
+                chunks: totalChunks,
+                assets: totalAssets,
+                documentIds: docIds
+            };
+        }
+
         if (mimeType !== 'text/markdown' && !originalName.endsWith('.md')) {
-            throw new Error(`Only Markdown files (.md) are supported. Received: ${mimeType}`);
+            throw new Error(`Only Markdown files (.md) or ZIP archives are supported. Received: ${mimeType}`);
         }
 
         const text = buffer.toString('utf-8');
 
+        const result = await this.processSingleMarkdown(text, originalName, mimeType);
+        return {
+            type: 'markdown',
+            ...result
+        };
+    }
+
+    private async processSingleMarkdown(text: string, originalName: string, mimeType: string) {
         if (!text || text.trim().length === 0) {
             throw new Error('Could not extract text from file');
         }
@@ -33,7 +85,7 @@ export class DocumentController {
         const docMetadata = {
             originalName,
             mimeType,
-            size: buffer.length,
+            size: text.length, // approximation for text size
             processedAt: new Date().toISOString()
         };
 
@@ -131,3 +183,4 @@ export class DocumentController {
 }
 
 export const documentController = new DocumentController();
+
