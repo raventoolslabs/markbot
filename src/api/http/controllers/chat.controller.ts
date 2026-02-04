@@ -8,10 +8,25 @@ import { config } from '@/app/config';
 
 import { ChatMessageRequestDto } from '@/api/http/types/ChatMessageRequestDto';
 import { ChatMessageResponseDto } from '@/api/http/types/ChatMessageResponseDto';
+import { SearchResultDto } from '@/api/http/types/SearchResultDto';
+import { DocumentAssetDto } from '@/api/http/types/DocumentAssetDto';
 
 export class ChatController {
+  private commands: Record<string, (context: ChatMessageRequestDto) => ChatMessageResponseDto> = {};
 
-  constructor() { }
+  constructor() {
+    this.registerCommands();
+  }
+
+  private registerCommands() {
+    this.commands = {
+      '/help': this.getHelpResponse.bind(this),
+      help: this.getHelpResponse.bind(this),
+      '/ping': this.getPingResponse.bind(this),
+      ping: this.getPingResponse.bind(this),
+      '/info': (context) => this.getInfoResponse(context.platform),
+    };
+  }
 
   /**
    * Process incoming messages and generate appropriate responses
@@ -19,48 +34,58 @@ export class ChatController {
    * @returns A formatted response object
    */
   async handleMessage(context: ChatMessageRequestDto): Promise<ChatMessageResponseDto> {
-    const { text, userName, platform } = context;
-
-    // Basic message processing logic
+    const { text } = context;
     const lowerText = text.toLowerCase().trim();
 
-    // Command handling
-    if (lowerText.startsWith('/help') || lowerText === 'help') {
-      return this.getHelpResponse();
+    const commandHandler = this.findCommandHandler(lowerText);
+
+    if (commandHandler) {
+      return commandHandler(context);
     }
 
-    if (lowerText.startsWith('/ping') || lowerText === 'ping') {
-      return {
-        text: '🏓 Pong! El bot está funcionando correctamente.',
-      };
+    return this.handleSemanticSearch(context);
+  }
+
+  private findCommandHandler(text: string) {
+    // Check for exact matches or startsWith for commands that accept args (if any)
+    // Current logic mainly checks startsWith.
+    // Order matters if we had overlapping commands, but here they are distinct enough.
+    const keys = Object.keys(this.commands);
+
+    for (const key of keys) {
+      if (text.startsWith(key)) {
+        return this.commands[key];
+      }
     }
 
-    if (lowerText.startsWith('/info')) {
-      return this.getInfoResponse(platform);
-    }
+    return null;
+  }
 
-    // Default: Perform semantic search and generate AI response
+  /**
+   * Performs semantic search and generates an AI response
+   */
+  private async handleSemanticSearch(context: ChatMessageRequestDto): Promise<ChatMessageResponseDto> {
+    const { text, userName, platform } = context;
+
     try {
       logger.info(`Searching context for: "${text}"`, 'MessageHandler');
-      const searchResults = await documentController.search(text, 3);
+      const searchResults = await documentController.search(text, config.vector.queryLimit);
 
       // Extract both content and assets from search results
-      const contextData = searchResults.map((res: any) => ({
+      const contextData = searchResults.map((res: SearchResultDto) => ({
         content: res.content,
-        assets: res.assets || []
+        assets: res.assets || [],
       }));
 
-      const contextStrings = contextData.map(d => d.content);
+      const contextStrings = contextData.map((d) => d.content);
 
       // Collect all images from all chunks
-      const allImages = contextData.flatMap(d =>
-        d.assets.filter((a: any) => a.asset_type === 'image')
-      );
+      const allImages = contextData.flatMap((d) => d.assets.filter((a: DocumentAssetDto) => a.asset_type === 'image'));
 
       if (contextStrings.length > 0) {
         logger.info(
           `Found ${contextStrings.length} relevant chunks with ${allImages.length} images.`,
-          'MessageHandler'
+          'MessageHandler',
         );
         const aiResponse = await this.generateResponse(text, contextStrings);
 
@@ -69,16 +94,16 @@ export class ChatController {
           metadata: {
             source: 'vector-search',
             resultsCount: contextStrings.length,
-            imagesCount: allImages.length
-          }
+            imagesCount: allImages.length,
+          },
         };
 
         // Include images if any were found
         if (allImages.length > 0) {
-          response.images = allImages.map((img: any) => ({
+          response.images = allImages.map((img: DocumentAssetDto) => ({
             name: img.asset_name,
-            mimeType: img.mime_type,
-            data: img.content // base64
+            mimeType: img.mime_type || 'application/octet-stream',
+            data: img.content, // base64
           }));
         }
 
@@ -92,7 +117,7 @@ export class ChatController {
         metadata: {
           processedAt: new Date().toISOString(),
           platform: platform || 'unknown',
-          source: 'echo-fallback'
+          source: 'echo-fallback',
         },
       };
     } catch (error) {
@@ -113,6 +138,12 @@ export class ChatController {
 • /ping - Verifica que el bot está activo
 • /info - Información sobre el bot
 • Cualquier otro mensaje - El bot responderá con un eco`,
+    };
+  }
+
+  private getPingResponse(): ChatMessageResponseDto {
+    return {
+      text: '🏓 Pong! El bot está funcionando correctamente.',
     };
   }
 
@@ -142,10 +173,7 @@ export class ChatController {
     };
   }
 
-  async generateResponse(
-    query: string,
-    context: string[]
-  ): Promise<string> {
+  async generateResponse(query: string, context: string[]): Promise<string> {
     try {
       const systemPrompt = `
         Eres MarkBot, un asistente inteligente y útil.
@@ -171,10 +199,6 @@ export class ChatController {
       const temperature = config.chat.temperature;
       const modelName = config.chat.modelName;
 
-      logger.info(`Provider: ${provider}`, 'MessageHandler');
-      logger.info(`Model Name: ${modelName}`, 'MessageHandler');
-      logger.info(`Temperature: ${temperature}`, 'MessageHandler');
-
       if (provider === 'ollama') {
         llm = new ChatOllama({
           baseUrl: config.chat.ollamaBaseUrl,
@@ -183,16 +207,13 @@ export class ChatController {
         });
       } else {
         llm = new ChatOpenAI({
-          openAIApiKey: config.chat.apiKey,
+          apiKey: config.chat.apiKey,
           modelName: modelName,
           temperature: temperature,
         });
       }
 
-      const response = await llm.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(query),
-      ]);
+      const response = await llm.invoke([new SystemMessage(systemPrompt), new HumanMessage(query)]);
 
       return response.content as string;
     } catch (error) {

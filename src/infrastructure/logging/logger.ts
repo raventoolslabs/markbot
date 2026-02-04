@@ -27,19 +27,24 @@ class Logger {
     return `[${timestamp}] [${level}]${prefixStr} ${message}`;
   }
 
-  info(message: string, prefix?: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  info(message: any, prefix?: string) {
     console.log(this.formatMessage(LogLevel.INFO, message, prefix));
   }
 
-  warn(message: string, prefix?: string, error?: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  warn(message: any, prefix?: string, error?: any) {
     console.warn(this.formatMessage(LogLevel.WARN, message, prefix));
+
     if (error) {
       console.warn(error);
     }
   }
 
-  error(message: string, prefix?: string, error?: any) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error(message: any, prefix?: string, error?: any) {
     console.error(this.formatMessage(LogLevel.ERROR, message, prefix));
+
     if (error) {
       console.error(error);
     }

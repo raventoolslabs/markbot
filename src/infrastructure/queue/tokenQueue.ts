@@ -27,6 +27,7 @@ export class TokenQueueManager {
         logger.info(`Processing refresh for provider: ${provider}`, 'TokenQueue');
 
         const handler = this.handlers.get(provider);
+
         if (!handler) {
           logger.error(`No handler registered for provider: ${provider}`, 'TokenQueue');
           throw new Error(`No handler for provider ${provider}`);
@@ -36,8 +37,9 @@ export class TokenQueueManager {
           // Execute handler and get next expiry time
           const nextExpiry = await handler();
           this.scheduleNextRefresh(provider, nextExpiry);
-        } catch (error) {
-          logger.error(`Error refreshing token for ${provider}`, 'TokenQueue', error);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          logger.error(`Error processing job ${job.id}: ${error.message}`, 'TokenQueue', error);
           // Optionally re-throw to let BullMQ handle retries
           throw error;
         }
@@ -51,6 +53,11 @@ export class TokenQueueManager {
 
     this.worker.on('failed', (job, err) => {
       logger.error(`Job ${job?.id} failed`, 'TokenQueue', err);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((err as any).response && (err as any).response.status === 429) {
+        logger.warn('Rate limit hit, pausing queue...', 'TokenQueue');
+      }
     });
 
     logger.info('Initialized Queue and Worker', 'TokenQueue');
@@ -70,17 +77,11 @@ export class TokenQueueManager {
     let delay = timeToExpiry - refreshBuffer;
 
     if (delay <= 0) {
-      logger.info(
-        `Token for ${provider} is expired or close to expiry. Scheduling immediate refresh.`,
-        'TokenQueue',
-      );
+      logger.info(`Token for ${provider} is expired or close to expiry. Scheduling immediate refresh.`, 'TokenQueue');
       delay = 1000;
     }
 
-    logger.info(
-      `Scheduling next refresh for ${provider} in ${Math.round(delay / 1000)}s`,
-      'TokenQueue',
-    );
+    logger.info(`Scheduling next refresh for ${provider} in ${Math.round(delay / 1000)}s`, 'TokenQueue');
 
     await this.queue.add(
       'refresh-token',
@@ -107,18 +108,22 @@ export class TokenQueueManager {
   }
 
   // Redis KV Storage methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async setToken(provider: string, tokenData: any): Promise<void> {
     const key = `token:${provider}`;
     await this.redis.set(key, JSON.stringify(tokenData));
     logger.debug(`Token preserved in Redis for ${provider}`, 'TokenQueue');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getToken(provider: string): Promise<any | null> {
     const key = `token:${provider}`;
     const data = await this.redis.get(key);
+
     if (data) {
       return JSON.parse(data);
     }
+
     return null;
   }
 

@@ -39,6 +39,7 @@ morgan.token('custom-date', () => {
 });
 
 morgan.token('clean-ip', (req) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ip = (req as any).ip || req.socket.remoteAddress || '';
   return ip.replace('::ffff:', '');
 });
@@ -46,12 +47,12 @@ morgan.token('clean-ip', (req) => {
 app.use(
   morgan('[:custom-date] [INFO] :method :url :status - :response-time ms - :clean-ip', {
     skip: (req) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const url = (req as any).originalUrl || req.url || '';
       return !url.startsWith('/api');
     },
   }),
 );
-
 
 // Serve specific favicons for Swagger UI (it requests them relative to /api/docs/)
 app.get('/api/docs/favicon-*.png', (req, res) => {
@@ -64,6 +65,7 @@ app.use('/api/docs', (req, res, next) => {
   if (req.originalUrl === '/api/docs' || req.originalUrl.split('?')[0] === '/api/docs') {
     return res.redirect(301, '/api/docs/');
   }
+
   next();
 });
 
@@ -86,6 +88,7 @@ if (require.main === module) {
     } catch (error) {
       logger.error('Failed to initialize Google Chat Service', 'App', error);
     }
+
     // Check and refresh tokens before starting the server, and start scheduler
     googleChatService.startTokenRefreshManager();
 

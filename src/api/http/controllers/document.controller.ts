@@ -8,179 +8,189 @@ import { vectorUtil } from '@/infrastructure/utils/vector.util';
 import { zipUtil } from '@/infrastructure/utils/zip.util';
 
 export class DocumentController {
+  private readonly modelName = 'Xenova/all-MiniLM-L6-v2';
 
-    private readonly modelName = 'Xenova/all-MiniLM-L6-v2';
+  constructor() {}
 
-    constructor() { }
+  async processFile(buffer: Buffer, originalName: string, mimeType: string) {
+    // Check for ZIP file
+    if (
+      mimeType === 'application/zip' ||
+      mimeType === 'application/x-zip-compressed' ||
+      originalName.toLowerCase().endsWith('.zip')
+    ) {
+      logger.info(`Processing ZIP file: ${originalName}`, 'DocumentController');
 
-    async processFile(buffer: Buffer, originalName: string, mimeType: string) {
+      const processedFiles = await zipUtil.processZipContent(buffer);
 
-        // Check for ZIP file
-        if (mimeType === 'application/zip' || mimeType === 'application/x-zip-compressed' || originalName.toLowerCase().endsWith('.zip')) {
-            logger.info(`Processing ZIP file: ${originalName}`, 'DocumentController');
+      if (processedFiles.length === 0) {
+        throw new Error('No valid markdown files found in the ZIP archive');
+      }
 
-            const processedFiles = await zipUtil.processZipContent(buffer);
+      const results = [];
 
-            if (processedFiles.length === 0) {
-                throw new Error('No valid markdown files found in the ZIP archive');
-            }
+      for (const file of processedFiles) {
+        try {
+          // Create a pseudo-name combining zip name and inner file name
+          // e.g., "archive.zip/guide.md" (or just "guide.md" if preferred, but existing logic might assume uniqueness)
+          // Let's use "zipname/innername" to identify source clearly
+          const compoundName = `${originalName}/${file.fileName}`;
 
-            const results = [];
-
-            for (const file of processedFiles) {
-                try {
-                    // Create a pseudo-name combining zip name and inner file name
-                    // e.g., "archive.zip/guide.md" (or just "guide.md" if preferred, but existing logic might assume uniqueness)
-                    // Let's use "zipname/innername" to identify source clearly
-                    const compoundName = `${originalName}/${file.fileName}`;
-
-                    const result = await this.processSingleMarkdown(file.content, compoundName, 'text/markdown');
-                    results.push(result);
-                } catch (err) {
-                    logger.error(`Error processing file ${file.fileName} from zip: ${err}`, 'DocumentController');
-                    // Continue with other files
-                }
-            }
-
-            // Aggregate results
-            const totalChunks = results.reduce((sum, r) => sum + r.chunks, 0);
-            const totalAssets = results.reduce((sum, r) => sum + r.assets, 0);
-            const docIds = results.map(r => r.documentId);
-
-            logger.info(`ZIP processing complete. Documents: ${results.length}, Chunks: ${totalChunks}, Assets: ${totalAssets}`, 'DocumentController');
-
-            return {
-                type: 'zip',
-                documentsProcessed: results.length,
-                chunks: totalChunks,
-                assets: totalAssets,
-                documentIds: docIds
-            };
+          const result = await this.processSingleMarkdown(file.content, compoundName, 'text/markdown');
+          results.push(result);
+        } catch (err) {
+          logger.error(`Error processing file ${file.fileName} from zip: ${err}`, 'DocumentController');
+          // Continue with other files
         }
+      }
 
-        if (mimeType !== 'text/markdown' && !originalName.endsWith('.md')) {
-            throw new Error(`Only Markdown files (.md) or ZIP archives are supported. Received: ${mimeType}`);
-        }
+      // Aggregate results
+      const totalChunks = results.reduce((sum, r) => sum + r.chunks, 0);
+      const totalAssets = results.reduce((sum, r) => sum + r.assets, 0);
+      const docIds = results.map((r) => r.documentId);
 
-        const text = buffer.toString('utf-8');
+      logger.info(
+        `ZIP processing complete. Documents: ${results.length}, Chunks: ${totalChunks}, Assets: ${totalAssets}`,
+        'DocumentController',
+      );
 
-        const result = await this.processSingleMarkdown(text, originalName, mimeType);
-        return {
-            type: 'markdown',
-            ...result
-        };
+      return {
+        type: 'zip',
+        documentsProcessed: results.length,
+        chunks: totalChunks,
+        assets: totalAssets,
+        documentIds: docIds,
+      };
     }
 
-    private async processSingleMarkdown(text: string, originalName: string, mimeType: string) {
-        if (!text || text.trim().length === 0) {
-            throw new Error('Could not extract text from file');
-        }
-
-        const processedDoc = await vectorUtil.processDocument(text);
-        const { chunks, assets } = processedDoc;
-
-        logger.info(`Processing file: ${originalName} (${text.length} chars, ${chunks.length} chunks, ${assets.length} assets)`, 'DocumentController');
-
-        const docId = crypto.randomUUID();
-        const docMetadata = {
-            originalName,
-            mimeType,
-            size: text.length, // approximation for text size
-            processedAt: new Date().toISOString()
-        };
-
-        await documentRepository.create({
-            id: docId,
-            organization: 'default',
-            path: originalName,
-            metadata: docMetadata
-        });
-
-        logger.info(`Created document record with ID: ${docId}`, 'DocumentController');
-
-        const chunkIds: number[] = [];
-        for (const chunk of chunks) {
-
-            const metadata = {
-                ...chunk.metadata,
-                document_id: docId,
-                source: originalName,
-                timestamp: docMetadata.processedAt
-            };
-
-            const embeddingString = `[${chunk.embedding?.join(',')}]`;
-
-            const result = await documentChunkRepository.create({
-                document_id: docId,
-                content: chunk.content,
-                metadata: metadata,
-                embedding: sql`${embeddingString}::vector`
-            });
-
-            // Store chunk ID for linking assets
-            chunkIds.push(result.id);
-        }
-
-        // Store assets and link to chunks
-        for (const asset of assets) {
-            const chunkIndex = asset.metadata?.chunk_index;
-            const chunkId = chunkIndex !== undefined && chunkIds[chunkIndex] ? chunkIds[chunkIndex] : undefined;
-
-            await documentChunkAssetRepository.create({
-                document_id: docId,
-                chunk_id: chunkId,
-                asset_type: asset.asset_type,
-                asset_name: asset.asset_name,
-                mime_type: asset.mime_type,
-                content: asset.content,
-                metadata: asset.metadata
-            });
-        }
-
-        logger.info(`File ${originalName} processed: ${chunks.length} chunks, ${assets.length} assets.`, 'DocumentController');
-
-        return { chunks: chunks.length, assets: assets.length, documentId: docId };
+    if (mimeType !== 'text/markdown' && !originalName.endsWith('.md')) {
+      throw new Error(`Only Markdown files (.md) or ZIP archives are supported. Received: ${mimeType}`);
     }
 
-    async search(query: string, limit: number = 5) {
-        const queryEmbedding = await vectorUtil.embedText(query);
-        const vectorString = `[${queryEmbedding.join(',')}]`;
+    const text = buffer.toString('utf-8');
 
-        const results = await documentChunkRepository.search(vectorString, limit);
+    const result = await this.processSingleMarkdown(text, originalName, mimeType);
+    return {
+      type: 'markdown',
+      ...result,
+    };
+  }
 
-        if (results.length > 0) {
-            const chunkIds = results.map((row: any) => row.id).join(', ');
-            logger.info(`[DEBUG] Search found ${results.length} chunks. IDs: ${chunkIds}`, 'DocumentController');
-        } else {
-            logger.info('[DEBUG] Search found 0 chunks.', 'DocumentController');
-        }
-
-        return results;
+  private async processSingleMarkdown(text: string, originalName: string, mimeType: string) {
+    if (!text || text.trim().length === 0) {
+      throw new Error('Could not extract text from file');
     }
 
-    async listDocuments() {
-        return await documentRepository.list();
+    const processedDoc = await vectorUtil.processDocument(text);
+    const { chunks, assets } = processedDoc;
+
+    logger.info(
+      `Processing file: ${originalName} (${text.length} chars, ${chunks.length} chunks, ${assets.length} assets)`,
+      'DocumentController',
+    );
+
+    const docId = crypto.randomUUID();
+    const docMetadata = {
+      originalName,
+      mimeType,
+      size: text.length, // approximation for text size
+      processedAt: new Date().toISOString(),
+    };
+
+    await documentRepository.create({
+      id: docId,
+      organization: 'default',
+      path: originalName,
+      metadata: docMetadata,
+    });
+
+    logger.info(`Created document record with ID: ${docId}`, 'DocumentController');
+
+    const chunkIds: number[] = [];
+
+    for (const chunk of chunks) {
+      const metadata = {
+        ...chunk.metadata,
+        document_id: docId,
+        source: originalName,
+        timestamp: docMetadata.processedAt,
+      };
+
+      const embeddingString = `[${chunk.embedding?.join(',')}]`;
+
+      const result = await documentChunkRepository.create({
+        document_id: docId,
+        content: chunk.content,
+        metadata: metadata,
+        embedding: sql`${embeddingString}::vector`,
+      });
+
+      // Store chunk ID for linking assets
+      chunkIds.push(result.id);
     }
 
-    async getDocument(id: string) {
-        const doc = await documentRepository.getById(id);
+    // Store assets and link to chunks
+    for (const asset of assets) {
+      const chunkIndex = asset.metadata?.chunk_index as number | undefined;
+      const chunkId = chunkIndex !== undefined && chunkIds[chunkIndex] ? chunkIds[chunkIndex] : undefined;
 
-        if (!doc) return null;
-
-        // Fetch chunks without embedding
-        const chunks = await documentChunkRepository.getByDocumentId(id);
-
-        return {
-            ...doc,
-            chunks: chunks
-        };
+      await documentChunkAssetRepository.create({
+        document_id: docId,
+        chunk_id: chunkId,
+        asset_type: asset.asset_type,
+        asset_name: asset.asset_name,
+        mime_type: asset.mime_type,
+        content: asset.content,
+        metadata: asset.metadata,
+      });
     }
 
-    async deleteDocument(id: string) {
-        await documentRepository.delete(id);
-        logger.info(`Deleted document with ID: ${id}`, 'DocumentController');
+    logger.info(
+      `File ${originalName} processed: ${chunks.length} chunks, ${assets.length} assets.`,
+      'DocumentController',
+    );
+
+    return { chunks: chunks.length, assets: assets.length, documentId: docId };
+  }
+
+  async search(query: string, limit: number = 5) {
+    const queryEmbedding = await vectorUtil.embedText(query);
+    const vectorString = `[${queryEmbedding.join(',')}]`;
+
+    const results = await documentChunkRepository.search(vectorString, limit);
+
+    if (results.length > 0) {
+      const chunkIds = results.map((row) => row.id).join(', ');
+      logger.info(`[DEBUG] Search found ${results.length} chunks. IDs: ${chunkIds}`, 'DocumentController');
+    } else {
+      logger.info('[DEBUG] Search found 0 chunks.', 'DocumentController');
     }
+
+    return results;
+  }
+
+  async listDocuments() {
+    return await documentRepository.list();
+  }
+
+  async getDocument(id: string) {
+    const doc = await documentRepository.getById(id);
+
+    if (!doc) return null;
+
+    // Fetch chunks without embedding
+    const chunks = await documentChunkRepository.getByDocumentId(id);
+
+    return {
+      ...doc,
+      chunks: chunks,
+    };
+  }
+
+  async deleteDocument(id: string) {
+    await documentRepository.delete(id);
+    logger.info(`Deleted document with ID: ${id}`, 'DocumentController');
+  }
 }
 
 export const documentController = new DocumentController();
-

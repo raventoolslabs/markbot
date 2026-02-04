@@ -28,21 +28,18 @@ const upload = multer({ storage: multer.memoryStorage() });
  *         description: File processed successfully
  */
 router.post('/', upload.single('file'), async (req: Request, res: Response) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded');
-    }
+  if (!req.file) {
+    return res.status(400).send('No file uploaded');
+  }
 
-    try {
-        const result = await documentController.processFile(
-            req.file.buffer,
-            req.file.originalname,
-            req.file.mimetype
-        );
-        res.json({ message: 'File processed successfully', ...result });
-    } catch (error: any) {
-        logger.error('Error processing file upload', 'DocumentRoutes', error);
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const result = await documentController.processFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+    res.json({ message: 'File processed successfully', ...result });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error processing file upload', 'DocumentRoutes', error);
+    res.status(500).json({ error: errorMessage });
+  }
 });
 
 /**
@@ -56,13 +53,14 @@ router.post('/', upload.single('file'), async (req: Request, res: Response) => {
  *         description: List of documents
  */
 router.get('/list', async (req: Request, res: Response) => {
-    try {
-        const documents = await documentController.listDocuments();
-        res.json(documents);
-    } catch (error: any) {
-        logger.error('Error listing documents', 'DocumentRoutes', error);
-        res.status(500).json({ error: error.message });
-    }
+  try {
+    const documents = await documentController.listDocuments();
+    res.json(documents);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error listing documents', 'DocumentRoutes', error);
+    res.status(500).json({ error: errorMessage });
+  }
 });
 
 /**
@@ -84,16 +82,19 @@ router.get('/list', async (req: Request, res: Response) => {
  *         description: Document not found
  */
 router.get('/:id', async (req: Request, res: Response) => {
-    try {
-        const document = await documentController.getDocument(req.params.id);
-        if (!document) {
-            return res.status(404).json({ error: 'Document not found' });
-        }
-        res.json(document);
-    } catch (error: any) {
-        logger.error('Error getting document', 'DocumentRoutes', error);
-        res.status(500).json({ error: error.message });
+  try {
+    const document = await documentController.getDocument(req.params.id);
+
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
     }
+
+    res.json(document);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error getting document', 'DocumentRoutes', error);
+    res.status(500).json({ error: errorMessage });
+  }
 });
 
 /**
@@ -115,13 +116,14 @@ router.get('/:id', async (req: Request, res: Response) => {
  *         description: Server error
  */
 router.delete('/:id', async (req: Request, res: Response) => {
-    try {
-        await documentController.deleteDocument(req.params.id);
-        res.json({ success: true, message: 'Document deleted successfully' });
-    } catch (error: any) {
-        logger.error(`Error deleting document: ${error.message}`, 'DocumentRoutes');
-        res.status(500).json({ error: 'Failed to delete document' });
-    }
+  try {
+    await documentController.deleteDocument(req.params.id);
+    res.json({ success: true, message: 'Document deleted successfully' });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(`Error deleting document: ${errorMessage}`, 'DocumentRoutes');
+    res.status(500).json({ error: 'Failed to delete document' });
+  }
 });
 
 export const documentRouter = router;

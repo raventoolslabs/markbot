@@ -7,8 +7,7 @@ export const config = {
   spaceId: process.env.SPACE_ID,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  googleClientScope:
-    process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
+  googleClientScope: process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
   googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
   appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
   googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
@@ -19,6 +18,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL,
   // Vectorization
   vector: {
+    queryLimit: parseInt(process.env.VECTOR_QUERY_LIMIT || '6', 10),
     maxChunkSize: parseInt(process.env.VECTOR_MAX_CHUNK_SIZE || '1000', 10),
     chunkOverlap: parseInt(process.env.VECTOR_CHUNK_OVERLAP || '100', 10),
     modelName: process.env.VECTOR_MODEL_NAME || 'Xenova/all-MiniLM-L6-v2',

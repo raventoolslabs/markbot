@@ -29,6 +29,13 @@ module.exports = [
             "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
             "no-undef": "error",
+            "padding-line-between-statements": [
+                "error",
+                { blankLine: "always", prev: "function", next: "*" },
+                { blankLine: "always", prev: "*", next: "function" },
+                { blankLine: "always", prev: "block-like", next: "*" },
+                { blankLine: "always", prev: "*", next: "block-like" }
+            ],
         },
     },
     {
