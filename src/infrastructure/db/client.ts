@@ -13,6 +13,9 @@ class ManagerDb {
     const dialect = new PostgresDialect({
       pool: new Pool({
         connectionString: config.databaseUrl,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }),
     });
 

@@ -38,3 +38,5 @@ out
 *.tsbuildinfo
 
 /src/generated/prisma
+
+deploy

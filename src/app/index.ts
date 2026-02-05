@@ -54,12 +54,6 @@ app.use(
   }),
 );
 
-// Serve specific favicons for Swagger UI (it requests them relative to /api/docs/)
-app.get('/api/docs/favicon-*.png', (req, res) => {
-  const filename = path.basename(req.path);
-  res.sendFile(path.join(__dirname, '../../web/public/img', filename));
-});
-
 // Swagger Redirect Loop Fix
 app.use('/api/docs', (req, res, next) => {
   if (req.originalUrl === '/api/docs' || req.originalUrl.split('?')[0] === '/api/docs') {

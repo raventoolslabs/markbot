@@ -32,7 +32,6 @@ export const swaggerSpec = swaggerJSDoc(options);
 
 export const swaggerDocumentationOptions = {
   customSiteTitle: 'Markbot API Docs',
-  customFavIcon: '/img/favicon.ico',
   customCss: `
         /* Base (Light Theme) - Default */
         body, .swagger-ui { background-color: #ffffff !important; color: #171717 !important; }
@@ -55,16 +54,6 @@ export const swaggerDocumentationOptions = {
 
         /* Logo Replacement */
         .swagger-ui .topbar-wrapper .link { display: none !important; }
-        .swagger-ui .topbar-wrapper::before {
-            content: '';
-            display: block;
-            width: 200px; 
-            height: 50px;
-            background-image: url('/img/title_250.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: left center;
-        }
 
         /* Dark Theme - Class Based Overrides */
         html.dark-mode body, 

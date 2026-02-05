@@ -1,4 +1,3 @@
-
 # Build stage
 FROM node:24-slim AS builder
 

@@ -1,5 +1,4 @@
-
-FROM node:20.11-alpine AS builder
+FROM node:24-slim AS builder
 
 WORKDIR /app
 
@@ -12,7 +11,7 @@ COPY . .
 # But we are using server-side rewrites, so it reads process.env at runtime.
 RUN npm run build
 
-FROM node:20.11-alpine AS runner
+FROM node:24-slim AS runner
 
 WORKDIR /app
 
