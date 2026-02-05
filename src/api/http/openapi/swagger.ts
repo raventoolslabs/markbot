@@ -25,7 +25,9 @@ const options: swaggerJSDoc.Options = {
       { name: 'Google', description: 'Google Workspace integration endpoints' },
     ],
   },
-  apis: ['./src/app/routes.ts', './src/api/http/routes/*.routes.ts'], // Path to the API docs
+  apis: process.env.NODE_ENV === 'production'
+    ? ['./dist/app/routes.js', './dist/api/http/routes/*.routes.js', './dist/api/http/routes/index.js']
+    : ['./src/app/routes.ts', './src/api/http/routes/*.routes.ts', './src/api/http/routes/index.ts'], // Path to the API docs
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
