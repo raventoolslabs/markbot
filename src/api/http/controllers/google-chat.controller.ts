@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { googleChatService } from '@/infrastructure/services/googleChat.service';
+import { googleChatService } from '@/app/services/googleChat.service';
 import { logger } from '@/infrastructure/logging/logger';
 import { chatController } from '@/api/http/controllers/chat.controller';
 

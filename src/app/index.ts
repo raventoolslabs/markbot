@@ -6,7 +6,7 @@ import { config } from './config';
 import { baseRouter } from '@/api/http/routes';
 import { swaggerSpec, swaggerDocumentationOptions } from '@/api/http/openapi/swagger';
 import { errorHandler } from '@/api/http/middlewares/error-handler.middleware';
-import { googleChatService } from '@/infrastructure/services/googleChat.service';
+import { googleChatService } from '@/app/services/googleChat.service';
 import { managerDb } from '@/infrastructure/db/client';
 
 import { logger } from '@/infrastructure/logging/logger';
