@@ -28,11 +28,16 @@ export const Header = () => {
                 <Link href="/chat" className="hover:text-white transition-colors font-semibold text-white/90">
                     {t.nav.chat}
                 </Link>
-                {/* Only show documents link if user is logged in */}
+                {/* Only show documents link and embedded chat if user is logged in */}
                 {user && (
-                    <Link href="/documents" className="hover:text-white transition-colors font-semibold text-white/90">
-                        {t.nav.documents}
-                    </Link>
+                    <>
+                        <Link href="/documents" className="hover:text-white transition-colors font-semibold text-white/90">
+                            {t.nav.documents}
+                        </Link>
+                        <Link href="/embedded-chat" className="hover:text-white transition-colors font-semibold text-white/90">
+                            {t.nav.embeddedChat}
+                        </Link>
+                    </>
                 )}
             </nav>
 
@@ -49,7 +54,7 @@ export const Header = () => {
 const HeaderActions = () => {
     const { user, logout } = useAuth();
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const { t } = useLanguage(); // Assuming we might want to translate 'Profile' and 'Logout' later
+    const { t } = useLanguage();
 
     if (user) {
         return (
@@ -87,7 +92,7 @@ const HeaderActions = () => {
                                     className={`${active ? 'bg-gray-100 dark:bg-gray-700' : ''
                                         } block px-4 py-2 text-sm text-gray-700 dark:text-gray-200`}
                                 >
-                                    Mi Perfil
+                                    {t.userMenu.profile}
                                 </Link>
                             )}
                         </Menu.Item>
@@ -98,7 +103,7 @@ const HeaderActions = () => {
                                     className={`${active ? 'bg-gray-100 dark:bg-gray-700' : ''
                                         } block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200`}
                                 >
-                                    Cerrar sesión
+                                    {t.userMenu.logout}
                                 </button>
                             )}
                         </Menu.Item>

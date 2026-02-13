@@ -74,4 +74,25 @@ export class ApiKeyRepository {
 
         return result.numDeletedRows > 0n;
     }
+
+    async findByKeyHash(keyHash: string): Promise<ApiKey | null> {
+        const row = await this.db
+            .withSchema('markbot')
+            .selectFrom('api_key')
+            .selectAll()
+            .where('key_hash', '=', keyHash)
+            .executeTakeFirst();
+
+        if (!row) return null;
+
+        return {
+            id: row.id,
+            userId: row.user_id,
+            name: row.name,
+            prefix: row.prefix,
+            expirationDate: row.expiration_date,
+            domain: row.domain,
+            createdAt: row.created_at,
+        };
+    }
 }

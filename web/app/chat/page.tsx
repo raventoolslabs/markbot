@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
+import Image from 'next/image'; // Assuming Image is used later
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
@@ -30,7 +31,65 @@ export default function ChatPage() {
     const [selectedImage, setSelectedImage] = useState<SelectedImage>(null);
     const mainRef = useRef<HTMLElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const searchParams = useSearchParams();
 
+    // Embed Mode State
+    const isEmbed = searchParams.get('embed') === '1';
+    const widgetToken = searchParams.get('token');
+    const [isTokenValid, setIsTokenValid] = useState<boolean | null>(isEmbed ? null : true);
+    const [widgetTheme, setWidgetTheme] = useState(searchParams.get('theme') || 'light');
+
+    // 1. Validate Token if Embedded
+    useEffect(() => {
+        if (isEmbed) {
+            if (!widgetToken) {
+                setIsTokenValid(false);
+                return;
+            }
+
+            const validateToken = async () => {
+                try {
+                    const res = await fetch('/api/widgets/validate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: widgetToken })
+                    });
+                    const data = await res.json();
+                    if (data.valid) {
+                        setIsTokenValid(true);
+                        // Notify parent that widget is ready
+                        window.parent.postMessage({ type: 'widget:ready' }, '*');
+                    } else {
+                        console.error('Widget token invalid:', data.error);
+                        setIsTokenValid(false);
+                    }
+                } catch (error) {
+                    console.error('Widget token validation failed:', error);
+                    setIsTokenValid(false);
+                }
+            };
+            validateToken();
+        }
+    }, [isEmbed, widgetToken]);
+
+    // 2. Report Resize (optional, good for auto-height widgets)
+    useEffect(() => {
+        if (!isEmbed) return;
+
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                window.parent.postMessage({
+                    type: 'widget:resize',
+                    height: entry.contentRect.height
+                }, '*');
+            }
+        });
+
+        if (document.body) observer.observe(document.body);
+        return () => observer.disconnect();
+    }, [isEmbed]);
+
+    // ... scroll logic ...
     const scrollToBottom = () => {
         if (mainRef.current) {
             const { scrollHeight, clientHeight } = mainRef.current;
@@ -40,6 +99,7 @@ export default function ChatPage() {
             });
         }
     };
+    // ...
 
     useEffect(() => {
         scrollToBottom();
@@ -53,7 +113,9 @@ export default function ChatPage() {
         }
     }, [input]);
 
+    // ... sendMessage ...
     const sendMessage = async (e: React.FormEvent) => {
+        // ... (existing logic) ...
         e.preventDefault();
         if (!input.trim()) return;
 
@@ -86,7 +148,7 @@ export default function ChatPage() {
             setIsLoading(false);
         }
     };
-
+    // ... handleKeyDown ...
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -94,17 +156,49 @@ export default function ChatPage() {
         }
     };
 
-    return (
-        <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-hidden relative">
-            <Header />
+    // Render Logic for Embed
+    if (isEmbed && isTokenValid === false) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-50 text-gray-500">
+                <p>Unauthorized: Invalid or expired widget token.</p>
+            </div>
+        );
+    }
 
-            <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 max-w-5xl mx-auto w-full pb-8 scroll-smooth bg-emerald-50/20 dark:bg-transparent">
-                {messages.length === 0 && (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in zoom-in duration-500">
-                        <div className="w-20 h-20 flex items-center justify-center mb-4">
-                            <Image src="/img/logo-without-title.png" alt="Markbot" width={80} height={80} className="object-contain" />
+    if (isEmbed && isTokenValid === null) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-white">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            </div>
+        );
+    }
+
+
+    return (
+        <div className={`flex flex-col h-screen transition-colors duration-300 overflow-hidden relative ${isEmbed ? 'bg-white' : 'bg-gray-50 dark:bg-gray-950'}`}>
+            {!isEmbed && <Header />}
+
+            {/* Embed Close Button */}
+            {isEmbed && (
+                <div className="absolute top-2 right-2 z-50">
+                    <button
+                        onClick={() => window.parent.postMessage({ type: 'widget:close' }, '*')}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 transition-colors"
+                        title="Close Chat"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            )}
+
+            <main ref={mainRef} className={`flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 w-full pb-8 scroll-smooth ${isEmbed ? 'bg-white' : 'max-w-5xl mx-auto bg-emerald-50/20 dark:bg-transparent'}`}>
+                {/* Logo and Welcome for Embed */}
+                {isEmbed && messages.length === 0 && (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in zoom-in duration-500 mt-10">
+                        <div className="w-16 h-16 flex items-center justify-center mb-2">
+                            <Image src="/img/logo-without-title.png" alt="Markbot" width={64} height={64} className="object-contain" />
                         </div>
-                        <p className="text-gray-500 dark:text-gray-400 max-w-md">{t.chat.start}</p>
+                        <p className="text-gray-500 text-sm max-w-xs">{t.chat.start}</p>
                     </div>
                 )}
 

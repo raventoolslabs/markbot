@@ -6,6 +6,7 @@ import { chatRouter } from './chat.routes';
 import { documentRouter } from './documents.routes';
 import { authRouter } from './auth.routes';
 import { apiKeyRouter } from './apiKey.routes';
+import { widgetRouter } from './widget.routes';
 
 const router = Router();
 
@@ -62,5 +63,6 @@ router.use('/chat', chatRouter);
 router.use('/document', documentRouter);
 router.use('/auth', authRouter);
 router.use('/keys', apiKeyRouter);
+router.use('/widgets', widgetRouter);
 
 export const baseRouter = router;

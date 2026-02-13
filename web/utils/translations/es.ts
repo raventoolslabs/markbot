@@ -14,6 +14,11 @@ export const es = {
         home: 'Inicio',
         chat: 'Chat',
         documents: 'Documentos',
+        embeddedChat: 'Chat Embebido',
+    },
+    userMenu: {
+        profile: 'Mi Perfil',
+        logout: 'Cerrar sesión',
     },
     footer: {
         rights: 'Todos los derechos reservados.',
