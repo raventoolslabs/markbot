@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { UploadModal } from '@/components/UploadModal';
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface Document {
     id: string;
@@ -19,6 +21,8 @@ interface Document {
 
 export default function DocumentsPage() {
     const { t } = useLanguage();
+    const { user, isLoading: isAuthLoading } = useAuth();
+    const router = useRouter();
     const [documents, setDocuments] = useState<Document[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -30,8 +34,16 @@ export default function DocumentsPage() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
-        fetchDocuments();
-    }, []);
+        if (!isAuthLoading && !user) {
+            router.push('/');
+        }
+    }, [user, isAuthLoading, router]);
+
+    useEffect(() => {
+        if (user) {
+            fetchDocuments();
+        }
+    }, [user]);
 
     const fetchDocuments = async () => {
         setLoading(true);
@@ -82,6 +94,22 @@ export default function DocumentsPage() {
             setIsDeleting(false);
         }
     };
+
+    if (isAuthLoading) {
+        return (
+            <div className="grid grid-rows-[auto_1fr_auto] min-h-screen font-[family-name:var(--font-geist-sans)] bg-white dark:bg-gray-950 transition-colors duration-300">
+                <Header />
+                <div className="flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return null; // Will redirect
+    }
 
     return (
         <div className="grid grid-rows-[auto_1fr_auto] min-h-screen font-[family-name:var(--font-geist-sans)] bg-white dark:bg-gray-950 transition-colors duration-300">

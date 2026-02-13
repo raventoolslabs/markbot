@@ -11,6 +11,7 @@ export const config = {
   googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
   appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
   googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
+  jwtSecret: process.env.JWT_SECRET,
   redisHost: process.env.REDIS_HOST || 'localhost',
   redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
   nodeEnv: process.env.NODE_ENV || 'development',

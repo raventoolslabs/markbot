@@ -1,3 +1,14 @@
+
+CREATE TABLE IF NOT EXISTS markbot.user (
+    id VARCHAR(40) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255),
+    picture VARCHAR(512),
+    google_id VARCHAR(255) UNIQUE,
+    creation_date TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP(6)
+);
+
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE SCHEMA IF NOT EXISTS markbot;
@@ -36,3 +47,18 @@ CREATE TABLE IF NOT EXISTS markbot.documentchunkasset (
 
 CREATE INDEX IF NOT EXISTS idx_documentchunkasset_document ON markbot.documentchunkasset(document_id);
 CREATE INDEX IF NOT EXISTS idx_documentchunkasset_chunk ON markbot.documentchunkasset(chunk_id);
+
+CREATE TABLE IF NOT EXISTS markbot.api_key (
+    id VARCHAR(40) PRIMARY KEY,
+    user_id VARCHAR(40) NOT NULL,
+    key_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    prefix VARCHAR(10) NOT NULL,
+    expiration_date TIMESTAMP(6),
+    domain VARCHAR(255),
+    created_at TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES markbot.user(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_key_user ON markbot.api_key(user_id);
+

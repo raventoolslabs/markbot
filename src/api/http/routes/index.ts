@@ -4,6 +4,8 @@ import path from 'path';
 import { googleRouter } from './google.routes';
 import { chatRouter } from './chat.routes';
 import { documentRouter } from './documents.routes';
+import { authRouter } from './auth.routes';
+import { apiKeyRouter } from './apiKey.routes';
 
 const router = Router();
 
@@ -58,5 +60,7 @@ router.get('/health', (req, res) => {
 router.use('/google', googleRouter);
 router.use('/chat', chatRouter);
 router.use('/document', documentRouter);
+router.use('/auth', authRouter);
+router.use('/keys', apiKeyRouter);
 
 export const baseRouter = router;
