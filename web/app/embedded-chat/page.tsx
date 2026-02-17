@@ -61,8 +61,6 @@ export default function EmbeddedChatPage() {
             const snippet = `<script src="${origin}/widget.js" 
     data-widget-id="markbot-widget-1" 
     data-token="${token}" 
-    data-chat-url="${origin}/chat" 
-    data-api-base="${origin}" 
     data-position="bottom-right" 
     data-theme="light">
 <\/script>`;
@@ -78,8 +76,6 @@ export default function EmbeddedChatPage() {
             script.src = "/widget.js";
             script.setAttribute('data-widget-id', 'markbot-widget-1');
             script.setAttribute('data-token', token);
-            script.setAttribute('data-chat-url', origin + '/chat');
-            script.setAttribute('data-api-base', origin);
             script.setAttribute('data-position', 'bottom-right');
             script.setAttribute('data-theme', 'light');
             document.body.appendChild(script);

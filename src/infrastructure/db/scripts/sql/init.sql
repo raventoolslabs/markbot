@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS markbot.user (
     id VARCHAR(40) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255),
-    picture VARCHAR(512),
     google_id VARCHAR(255) UNIQUE,
     creation_date TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP(6)
@@ -47,6 +46,21 @@ CREATE TABLE IF NOT EXISTS markbot.documentchunkasset (
 
 CREATE INDEX IF NOT EXISTS idx_documentchunkasset_document ON markbot.documentchunkasset(document_id);
 CREATE INDEX IF NOT EXISTS idx_documentchunkasset_chunk ON markbot.documentchunkasset(chunk_id);
+
+
+CREATE TABLE IF NOT EXISTS markbot.userasset (
+    id BIGSERIAL PRIMARY KEY,
+    user_id VARCHAR(40) NOT NULL,
+    asset_type VARCHAR(20) NOT NULL,
+    asset_name VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100),
+    content TEXT NOT NULL,
+    metadata JSONB,
+    creation_date TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_userasset_user FOREIGN KEY (user_id) REFERENCES markbot.user(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_userasset_user ON markbot.userasset(user_id);
 
 CREATE TABLE IF NOT EXISTS markbot.api_key (
     id VARCHAR(40) PRIMARY KEY,

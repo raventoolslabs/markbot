@@ -1,17 +1,22 @@
 (function () {
     // 1. Read configuration from script tag
     const script = document.currentScript;
+
+    // Derive base URL from script source
+    const scriptSrc = new URL(script.src);
+    const baseUrl = scriptSrc.origin;
+
     const config = {
         widgetId: script.getAttribute('data-widget-id'),
         token: script.getAttribute('data-token'),
-        chatUrl: script.getAttribute('data-chat-url'),
-        apiBase: script.getAttribute('data-api-base'),
+        chatUrl: script.getAttribute('data-chat-url') || `${baseUrl}/chat`,
+        apiBase: script.getAttribute('data-api-base') || baseUrl,
         position: script.getAttribute('data-position') || 'bottom-right',
         theme: script.getAttribute('data-theme') || 'light'
     };
 
-    if (!config.widgetId || !config.token || !config.chatUrl) {
-        console.error('Markbot Widget: Missing required attributes (data-widget-id, data-token, data-chat-url)');
+    if (!config.widgetId || !config.token) {
+        console.error('Markbot Widget: Missing required attributes (data-widget-id, data-token)');
         return;
     }
 

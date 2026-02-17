@@ -6,6 +6,8 @@ import { logger } from '@/infrastructure/logging/logger';
 import { userRepository } from '@/infrastructure/db/repositories/user.repository';
 import { v4 as uuidv4 } from 'uuid';
 import { createOAuthClient } from '@/infrastructure/google/oauth.client';
+import { downloadImageAsBase64 } from '@/infrastructure/utils/image.util';
+import { userAssetRepository } from '@/infrastructure/db/repositories/user-asset.repository';
 
 const client: OAuth2Client = createOAuthClient();
 
@@ -42,11 +44,13 @@ export const googleLogin = async (req: Request, res: Response) => {
 
         if (!user) {
             // Create new user
+            const userId = uuidv4();
+            let pictureUrl = picture || null;
+
             const newUser = {
-                id: uuidv4(),
+                id: userId,
                 email,
                 name: name || null,
-                picture: picture || null,
                 google_id: googleId,
                 creation_date: new Date(),
                 last_login: new Date(),
@@ -55,12 +59,25 @@ export const googleLogin = async (req: Request, res: Response) => {
             await userRepository.create(newUser);
 
             user = newUser;
+
+            if (picture) {
+                const image = await downloadImageAsBase64(picture);
+                if (image) {
+                    await userAssetRepository.create({
+                        user_id: userId,
+                        asset_type: 'image',
+                        asset_name: 'profile_picture',
+                        mime_type: image.mimeType,
+                        content: image.content,
+                        metadata: { source: 'google', originalUrl: picture },
+                    });
+                }
+            }
         } else {
             // Update last login
             await userRepository.update(user.id, {
                 last_login: new Date(),
-                picture: picture || null,
-                name: name || null,
+                // Do not update name to allow user modifications
             });
         }
 
@@ -77,7 +94,7 @@ export const googleLogin = async (req: Request, res: Response) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                picture: user.picture,
+                picture: `${config.appHost}/api/users/${user.id}/image`,
             },
         });
     } catch (error) {

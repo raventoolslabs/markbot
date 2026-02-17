@@ -8,6 +8,8 @@ import { authRouter } from './auth.routes';
 import { apiKeyRouter } from './apiKey.routes';
 import { widgetRouter } from './widget.routes';
 
+import { usersRouter } from './users.routes';
+
 const router = Router();
 
 /**
@@ -64,5 +66,6 @@ router.use('/document', documentRouter);
 router.use('/auth', authRouter);
 router.use('/keys', apiKeyRouter);
 router.use('/widgets', widgetRouter);
+router.use('/users', usersRouter);
 
 export const baseRouter = router;
