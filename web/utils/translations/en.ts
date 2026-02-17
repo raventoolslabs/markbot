@@ -18,7 +18,9 @@ export const en = {
     },
     userMenu: {
         profile: 'My Profile',
-        logout: 'Logout',
+        account: 'Account',
+        apiKey: 'API Key',
+        logout: 'Log out',
     },
     footer: {
         rights: 'All rights reserved.',
@@ -62,5 +64,29 @@ export const en = {
         cancel: 'Cancel',
         success: 'Document deleted successfully',
         error: 'Error deleting document',
+    },
+    profile: {
+        tabs: {
+            account: 'Account',
+            api: 'API Key',
+        },
+        account: {
+            title: 'User Profile',
+            deleteTitle: 'Delete Account',
+            deleteDescription: 'Once you delete your account, there is no going back. Please be certain.',
+            deleteButton: 'Delete Account',
+            deleteWarningTitle: 'Are you sure you want to delete your account?',
+            deleteWarningDescription: 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+            deleteConfirm: 'Delete Account',
+            deleteCancel: 'Cancel',
+            edit: 'Edit',
+            save: 'Save',
+            cancel: 'Cancel',
+            changePhoto: 'Change',
+            userId: 'User ID',
+        },
+        api: {
+            title: 'API Key Manager',
+        }
     }
 };

@@ -18,6 +18,8 @@ export const es = {
     },
     userMenu: {
         profile: 'Mi Perfil',
+        account: 'Cuenta',
+        apiKey: 'Clave API',
         logout: 'Cerrar sesión',
     },
     footer: {
@@ -62,5 +64,29 @@ export const es = {
         cancel: 'Cancelar',
         success: 'Documento borrado correctamente',
         error: 'Error al borrar el documento',
+    },
+    profile: {
+        tabs: {
+            account: 'Cuenta',
+            api: 'Clave API',
+        },
+        account: {
+            title: 'Perfil de Usuario',
+            deleteTitle: 'Borrar Cuenta',
+            deleteDescription: 'Una vez que borres tu cuenta, no hay vuelta atrás. Por favor, asegúrate.',
+            deleteButton: 'Borrar Cuenta',
+            deleteWarningTitle: '¿Estás seguro de que quieres borrar tu cuenta?',
+            deleteWarningDescription: 'Esta acción no se puede deshacer. Esto eliminará permanentemente tu cuenta y borrará tus datos de nuestros servidores.',
+            deleteConfirm: 'Borrar Cuenta',
+            deleteCancel: 'Cancelar',
+            edit: 'Editar',
+            save: 'Guardar',
+            cancel: 'Cancelar',
+            changePhoto: 'Cambiar',
+            userId: 'ID de Usuario',
+        },
+        api: {
+            title: 'Gestor de Clave API',
+        }
     }
 };

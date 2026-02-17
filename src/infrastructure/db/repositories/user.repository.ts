@@ -31,6 +31,14 @@ export class UserRepository {
             .where('id', '=', id)
             .execute();
     }
+
+    async delete(id: string): Promise<void> {
+        await managerDb.db
+            .withSchema('markbot')
+            .deleteFrom('user')
+            .where('id', '=', id)
+            .execute();
+    }
 }
 
 export const userRepository = new UserRepository();
