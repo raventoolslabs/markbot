@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image'; // Assuming Image is used later
 import ReactMarkdown from 'react-markdown';
@@ -23,8 +23,9 @@ type SelectedImage = {
     alt: string;
 } | null;
 
-export default function ChatPage() {
+function ChatContent() {
     const { t } = useLanguage();
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +39,8 @@ export default function ChatPage() {
     const widgetToken = searchParams.get('token');
     const [isTokenValid, setIsTokenValid] = useState<boolean | null>(isEmbed ? null : true);
     const [widgetTheme, setWidgetTheme] = useState(searchParams.get('theme') || 'light');
+    // State for full screen
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     // 1. Validate Token if Embedded
     useEffect(() => {
@@ -174,13 +177,35 @@ export default function ChatPage() {
     }
 
 
+
+
+    const toggleFullScreen = () => {
+        setIsFullScreen(!isFullScreen);
+        window.parent.postMessage({ type: 'widget:toggle-fullscreen' }, '*');
+    };
+
     return (
         <div className={`flex flex-col h-screen transition-colors duration-300 overflow-hidden relative ${isEmbed ? 'bg-white' : 'bg-gray-50 dark:bg-gray-950'}`}>
             {!isEmbed && <Header />}
 
-            {/* Embed Close Button */}
+            {/* Embed Close Button Header */}
             {isEmbed && (
-                <div className="absolute top-2 right-2 z-50">
+                <div className="flex items-center justify-end px-2 pt-2 pb-0 z-50 bg-white gap-2">
+                    <button
+                        onClick={toggleFullScreen}
+                        className="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 transition-colors"
+                        title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+                    >
+                        {isFullScreen ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                            </svg>
+                        )}
+                    </button>
                     <button
                         onClick={() => window.parent.postMessage({ type: 'widget:close' }, '*')}
                         className="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 transition-colors"
@@ -332,12 +357,22 @@ export default function ChatPage() {
                             </svg>
                         </button>
                     </div>
-                    <div className="text-center mt-2 text-[10px] uppercase tracking-widest font-bold text-emerald-700/50 dark:text-gray-600">
-                        Markbot can make mistakes. Consider checking important information.
-                    </div>
+                    {!isEmbed && (
+                        <div className="text-center mt-2 text-[10px] uppercase tracking-widest font-bold text-emerald-700/50 dark:text-gray-600">
+                            Markbot can make mistakes. Consider checking important information.
+                        </div>
+                    )}
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center h-screen bg-white"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div></div>}>
+            <ChatContent />
+        </Suspense>
     );
 }
 

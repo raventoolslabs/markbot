@@ -17,6 +17,11 @@ app.set('etag', false);
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  next();
+});
+
 // Assets
 app.use(express.static(path.join(__dirname, '../../web/public')));
 
