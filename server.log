@@ -1,0 +1,23 @@
+[2026-02-18 10:33:53] [INFO] [TokenQueue] Initialized Queue and Worker
+[2026-02-18 10:33:53] [INFO] [TokenQueue] Registered handler for: google
+[2026-02-18 10:33:54] [INFO] [ManagerDB] Connecting to Database via Kysely...
+[2026-02-18 10:33:54] [INFO] [ManagerDB] Initializing Database Schema...
+[2026-02-18 10:33:55] [INFO] [ManagerDB] Database initialized and schemas verified.
+[2026-02-18 10:33:55] [WARN] [GoogleChatService] No Google Client Token configured. Manager not started.
+[2026-02-18 10:33:55] [WARN] [GoogleChatService] No Google Client Token configured. Manager not started.
+[2026-02-18 10:33:55] [INFO] [Server] Server is running on port 3002
+[2026-02-18 10:34:44] [INFO] [EmailService] Verification email sent to test_2fa_2f15cd06-000a-43f5-a78c-0b61c25bbbef@example.com (MessageID: <d47c4c41-716a-05b6-05b1-dcfbb165620f@markbot.com>)
+[2026-02-18 10:34:44] [INFO] POST /api/auth/register 201 - 2339.883 ms - 127.0.0.1
+[2026-02-18 10:34:45] [INFO] POST /api/auth/login 200 - 126.544 ms - 127.0.0.1
+[2026-02-18 10:34:45] [INFO] POST /api/auth/2fa/enable/start 200 - 138.043 ms - 127.0.0.1
+[2026-02-18 10:34:45] [INFO] POST /api/auth/2fa/enable/complete 200 - 364.103 ms - 127.0.0.1
+[2026-02-18 10:34:45] [INFO] POST /api/auth/login 200 - 122.826 ms - 127.0.0.1
+[2026-02-18 10:34:45] [INFO] POST /api/auth/2fa/verify 200 - 81.739 ms - 127.0.0.1
+[2026-02-18 10:34:46] [INFO] POST /api/auth/2fa/disable 200 - 200.582 ms - 127.0.0.1
+[2026-02-18 11:10:36] [INFO] GET /api/users/d79a89b7-088e-413b-9f15-722d10605847/image 200 - 509.935 ms - 127.0.0.1
+[2026-02-18 11:10:42] [INFO] POST /api/auth/2fa/enable/start 200 - 136.905 ms - 127.0.0.1
+[2026-02-18 11:12:10] [INFO] POST /api/auth/2fa/enable/complete 200 - 748.707 ms - 127.0.0.1
+[2026-02-18 11:12:25] [INFO] GET /api/auth/2fa/recovery-codes 200 - 621.846 ms - 127.0.0.1
+[2026-02-18 11:14:10] [INFO] POST /api/auth/google 200 - 447.565 ms - 127.0.0.1
+[2026-02-18 11:14:17] [INFO] POST /api/auth/google 200 - 72.282 ms - 127.0.0.1
+[2026-02-18 11:14:27] [INFO] POST /api/auth/google 200 - 414.008 ms - 127.0.0.1

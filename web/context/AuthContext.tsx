@@ -9,6 +9,8 @@ interface User {
     email: string;
     name: string;
     picture: string;
+    two_factor_enabled?: boolean;
+    email_verified?: boolean;
 }
 
 interface AuthContextType {
@@ -16,7 +18,12 @@ interface AuthContextType {
     token: string | null;
     login: () => void;
     logout: () => void;
-    processLogin: (credential: string) => Promise<void>;
+    processLogin: (credential: string) => Promise<any>;
+    loginWithEmail: (email: string, password: string) => Promise<any>;
+    registerWithEmail: (email: string, password: string, name: string) => Promise<any>;
+    verify2fa: (tempToken: string, code: string) => Promise<void>;
+    verifyEmail: (email: string, code: string) => Promise<void>;
+    resendVerificationEmail: (email: string) => Promise<void>;
     isLoading: boolean;
     updateUser: (user: User) => void;
 }
@@ -52,33 +59,147 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         Cookies.remove('user');
     };
 
+    const handleAuthResponse = (data: any) => {
+        const { token: jwtToken, user: userData } = data;
+        setToken(jwtToken);
+        setUser(userData);
+        Cookies.set('token', jwtToken, { expires: 7 });
+        Cookies.set('user', JSON.stringify(userData), { expires: 7 });
+    };
+
     const processLogin = async (credential: string) => {
         try {
             const res = await fetch('/api/auth/google', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: credential }),
             });
 
+            if (!res.ok) throw new Error('Login failed');
+
+            const data = await res.json();
+
+            if (data.requires_2fa) {
+                return data; // Return to caller to handle 2FA step
+            }
+
+            handleAuthResponse(data);
+        } catch (error) {
+            console.error('Google login error:', error);
+            throw error;
+        }
+    };
+
+    const loginWithEmail = async (email: string, password: string) => {
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
             if (!res.ok) {
-                throw new Error('Login failed');
+                const err = await res.json();
+                throw new Error(err.message || 'Login failed');
             }
 
             const data = await res.json();
-            const { token: jwtToken, user: userData } = data;
 
-            setToken(jwtToken);
-            setUser(userData);
+            if (data.requires_2fa) {
+                return data;
+            }
 
-            Cookies.set('token', jwtToken, { expires: 7 }); // 7 days
-            Cookies.set('user', JSON.stringify(userData), { expires: 7 });
+            handleAuthResponse(data);
         } catch (error) {
-            console.error('Google login error:', error);
-            alert('Login failed');
+            console.error('Login error:', error);
+            throw error;
         }
-    }
+    };
+
+    const registerWithEmail = async (email: string, password: string, name: string) => {
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, name }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Registration failed');
+            }
+
+            const data = await res.json();
+            if (data.requires_email_verification) {
+                return data;
+            }
+            handleAuthResponse(data);
+            return data;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
+    };
+
+    const verifyEmail = async (email: string, code: string) => {
+        try {
+            const res = await fetch('/api/auth/verify-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Email verification failed');
+            }
+
+            const data = await res.json();
+            handleAuthResponse(data);
+        } catch (error) {
+            console.error('Email verification error:', error);
+            throw error;
+        }
+    };
+
+    const resendVerificationEmail = async (email: string) => {
+        try {
+            const res = await fetch('/api/auth/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Failed to resend verification email');
+            }
+        } catch (error) {
+            console.error('Resend verification error:', error);
+            throw error;
+        }
+    };
+
+    const verify2fa = async (tempToken: string, code: string) => {
+        try {
+            const res = await fetch('/api/auth/2fa/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ temp_token: tempToken, code }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Verification failed');
+            }
+
+            const data = await res.json();
+            handleAuthResponse(data);
+        } catch (error) {
+            console.error('2FA Verification error:', error);
+            throw error;
+        }
+    };
 
     const updateUser = (userData: User) => {
         setUser(userData);
@@ -86,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login: () => { }, logout, processLogin, isLoading, updateUser }}>
+        <AuthContext.Provider value={{ user, token, login: () => { }, logout, processLogin, loginWithEmail, registerWithEmail, verify2fa, verifyEmail, resendVerificationEmail, isLoading, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -21,6 +21,7 @@ export const authenticationMiddleware = (req: Request, res: Response, next: Next
         const decoded = jwt.verify(token, config.jwtSecret || 'default_secret_change_me') as any;
         (req as any).user = {
             id: decoded.userId,
+            userId: decoded.userId,
             email: decoded.email
         };
         next();

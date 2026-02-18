@@ -12,6 +12,7 @@ export const config = {
   appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
   googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
   jwtSecret: process.env.JWT_SECRET,
+  encryptionKey: process.env.ENCRYPTION_KEY,
   redisHost: process.env.REDIS_HOST || 'localhost',
   redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -31,5 +32,12 @@ export const config = {
     temperature: parseFloat(process.env.CHAT_TEMPERATURE || '0.7'),
     apiKey: process.env.CHAT_API_KEY,
     ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+  },
+  email: {
+    host: process.env.SMTP_HOST || 'smtp.example.com',
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    user: process.env.SMTP_USER || 'user',
+    password: process.env.SMTP_PASSWORD || 'password',
+    from: process.env.SMTP_FROM || '"MarkBot" <noreply@markbot.com>',
   },
 };

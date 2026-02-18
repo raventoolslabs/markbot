@@ -3,9 +3,10 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar } from './Avatar';
 
 interface GoogleLoginButtonProps {
-    onSuccess?: () => void;
+    onSuccess?: (data?: any) => void;
 }
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess }) => {
@@ -17,9 +18,12 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess 
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                     {user.name}
                 </span>
-                {user.picture && (
-                    <img src={user.picture} alt={user.name} className="w-8 h-8 rounded-full" />
-                )}
+                <Avatar
+                    src={user.picture}
+                    name={user.name}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full"
+                />
                 <button
                     onClick={logout}
                     className="px-4 py-2 text-sm text-red-600 border border-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -32,11 +36,15 @@ export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onSuccess 
 
     return (
         <GoogleLogin
-            onSuccess={credentialResponse => {
+            onSuccess={async (credentialResponse) => {
                 if (credentialResponse.credential) {
-                    processLogin(credentialResponse.credential);
-                    if (onSuccess) {
-                        onSuccess();
+                    try {
+                        const data = await processLogin(credentialResponse.credential);
+                        if (onSuccess) {
+                            onSuccess(data);
+                        }
+                    } catch (error) {
+                        console.error("Google Login failed", error);
                     }
                 }
             }}

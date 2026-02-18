@@ -10,6 +10,7 @@ import { LoginModal } from './LoginModal';
 import { useAuth } from '@/context/AuthContext';
 import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
+import { Avatar } from './Avatar';
 
 export const Header = () => {
     const { t } = useLanguage();
@@ -62,17 +63,12 @@ const HeaderActions = () => {
                 <div>
                     <Menu.Button className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                         <span className="sr-only">Open user menu</span>
-                        {user.picture ? (
-                            <img
-                                className="h-9 w-9 rounded-full border-2 border-emerald-500 object-cover"
-                                src={user.picture}
-                                alt={user.name}
-                            />
-                        ) : (
-                            <div className="h-9 w-9 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
-                                {user.name.charAt(0)}
-                            </div>
-                        )}
+                        <Avatar
+                            className="h-9 w-9 rounded-full border-2 border-emerald-500"
+                            src={user.picture}
+                            name={user.name}
+                            alt={user.name}
+                        />
                     </Menu.Button>
                 </div>
                 <Transition

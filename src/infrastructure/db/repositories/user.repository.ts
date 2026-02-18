@@ -11,6 +11,15 @@ export class UserRepository {
             .executeTakeFirst();
     }
 
+    async findById(id: string): Promise<UserRow | undefined> {
+        return await managerDb.db
+            .withSchema('markbot')
+            .selectFrom('user')
+            .selectAll()
+            .where('id', '=', id)
+            .executeTakeFirst();
+    }
+
     async create(user: UserRow): Promise<UserRow> {
         await managerDb.db
             .withSchema('markbot')

@@ -5,6 +5,7 @@ import { LanguageProvider } from '../context/LanguageContext';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from '../context/AuthContext';
+import { VerificationGuard } from '@/components/VerificationGuard';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -13,6 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <LanguageProvider>
                         {children}
+                        <VerificationGuard />
                     </LanguageProvider>
                 </ThemeProvider>
             </AuthProvider>
