@@ -10,6 +10,52 @@ export const en = {
         start: 'Start a conversation with Mark...',
         error: 'Error connecting to server.',
     },
+    auth: {
+        login: {
+            title: 'Login',
+            submit: 'Sign In',
+            noAccount: "Don't have an account?",
+            signUpLink: 'Sign up',
+        },
+        register: {
+            title: 'Create Account',
+            submit: 'Sign Up',
+            hasAccount: "Already have an account?",
+            signInLink: 'Sign in',
+            nameLabel: 'Name',
+            namePlaceholder: 'Your Name',
+        },
+        twoFactor: {
+            title: 'Two-Factor Authentication',
+            label: 'Authenticator Code',
+            placeholder: '123456',
+            submit: 'Verify',
+        },
+        verifyEmail: {
+            title: 'Verify Email',
+            label: 'Verification Code',
+            placeholder: '123456',
+            submitRequest: 'Send Code',
+            submitVerify: 'Verify',
+            resend: 'Resend Code',
+            logout: 'Log out',
+            sentMessage: 'We sent a code to',
+            checkInbox: 'Please check your inbox.',
+            requestMessage: 'Please verify your email address:',
+            clickBelow: 'Click below to receive a verification code.',
+            resendSuccess: 'New code sent to',
+            resendError: 'Failed to resend code',
+        },
+        common: {
+            emailLabel: 'Email',
+            emailPlaceholder: 'you@example.com',
+            passwordLabel: 'Password',
+            passwordPlaceholder: '••••••••',
+            loading: 'Loading...',
+            orContinue: 'Or continue with',
+            error: 'Authentication failed',
+        }
+    },
     nav: {
         home: 'Home',
         chat: 'Chat',
@@ -19,6 +65,7 @@ export const en = {
     userMenu: {
         profile: 'My Profile',
         account: 'Account',
+        security: 'Security',
         apiKey: 'API Key',
         logout: 'Log out',
     },
@@ -68,6 +115,7 @@ export const en = {
     profile: {
         tabs: {
             account: 'Account',
+            security: 'Security',
             api: 'API Key',
         },
         account: {
@@ -84,6 +132,33 @@ export const en = {
             cancel: 'Cancel',
             changePhoto: 'Change',
             userId: 'User ID',
+        },
+        security: {
+            title: 'Security',
+            twoFactor: {
+                title: 'Two-Factor Authentication',
+                enabled: '2FA is currently enabled for your account.',
+                disabled: 'Secure your account with TOTP (Google Authenticator, Authy, etc.).',
+                enableButton: 'Enable 2FA',
+                disableButton: 'Disable 2FA',
+                regenerateButton: 'Regenerate Recovery Codes',
+                setupTitle: 'Setup 2FA',
+                scanQr: 'Scan the QR code with your authenticator app.',
+                enterSecret: 'Or enter secret:',
+                verifyButton: 'Verify & Enable',
+                recoveryCodesTitle: 'Recovery Codes',
+                recoveryCodesDescription: 'Save these codes in a safe place. They are the only way to access your account if you lose your 2FA device.',
+                recoveryCodesWarning: 'These codes will not be shown again.',
+                savedButton: 'I have saved them',
+                disableConfirm: 'Are you sure you want to disable 2FA?',
+                disablePrompt: 'Enter your 2FA code or Password to confirm:',
+                disableSuccess: '2FA Disabled',
+                disableError: 'Failed to disable 2FA. Ensure code/password is correct.',
+                regenerateConfirm: 'This will invalidate old codes. Continue?',
+                regenerateError: 'Failed to regenerate codes',
+                setupError: 'Failed to start 2FA setup',
+                verifyError: 'Invalid code',
+            }
         },
         api: {
             title: 'API Key Manager',

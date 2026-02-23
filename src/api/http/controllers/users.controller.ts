@@ -76,7 +76,8 @@ export const updateUser = async (req: Request, res: Response) => {
                 id: updatedUser!.id,
                 email: updatedUser!.email,
                 name: updatedUser!.name,
-                picture: `${config.appHost}/api/users/${updatedUser!.id}/image`, // Always return the endpoint
+                picture: `/api/users/${updatedUser!.id}/image`, // Always return the endpoint
+                two_factor_enabled: updatedUser!.two_factor_enabled,
             }
         });
 

@@ -40,12 +40,6 @@ export const HomeContent = () => {
                         {t.chat.start}
                         <span className="absolute inset-0 rounded-full ring-2 ring-white/10 group-hover:ring-white/20 animate-pulse"></span>
                     </Link>
-                    <Link
-                        href="/documents"
-                        className="group relative px-8 py-4 bg-white dark:bg-gray-800 border-2 border-emerald-800 dark:border-emerald-500 text-emerald-800 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                    >
-                        View Documents
-                    </Link>
                 </div>
             </div>
 

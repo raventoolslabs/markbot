@@ -36,7 +36,7 @@ const generateTempToken = (user: { id: string, email: string }) => {
 
 const getProfilePictureUrl = async (userId: string): Promise<string | null> => {
     const asset = await userAssetRepository.findByUserId(userId);
-    return asset ? `${config.appHost}/api/users/${userId}/image` : null;
+    return asset ? `/api/users/${userId}/image` : null;
 };
 
 export const register = async (req: Request, res: Response) => {
@@ -107,6 +107,7 @@ export const register = async (req: Request, res: Response) => {
                 name: newUser.name,
                 picture: null,
                 email_verified: newUser.email_verified,
+                two_factor_enabled: newUser.two_factor_enabled,
             },
             requires_email_verification: true
         });
@@ -194,6 +195,7 @@ export const login = async (req: Request, res: Response) => {
                 name: user.name,
                 picture,
                 email_verified: user.email_verified,
+                two_factor_enabled: user.two_factor_enabled,
             },
         });
 
@@ -253,6 +255,7 @@ export const verify2fa = async (req: Request, res: Response) => {
                 name: user.name,
                 picture,
                 email_verified: user.email_verified,
+                two_factor_enabled: user.two_factor_enabled,
             },
         });
     } catch (error) {
@@ -364,6 +367,7 @@ export const googleLogin = async (req: Request, res: Response) => {
                 name: user.name,
                 picture: userPicture,
                 email_verified: user.email_verified,
+                two_factor_enabled: user.two_factor_enabled,
             },
         });
     } catch (error) {
@@ -582,6 +586,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
                 name: user.name,
                 picture,
                 email_verified: true,
+                two_factor_enabled: user.two_factor_enabled,
             }
         });
 

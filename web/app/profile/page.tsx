@@ -133,7 +133,7 @@ function ProfileContent() {
             setIs2faSetupOpen(true);
         } catch (error) {
             console.error('2FA start error', error);
-            alert('Failed to start 2FA setup');
+            alert(t.profile.security.twoFactor.setupError);
         }
     };
 
@@ -159,15 +159,15 @@ function ProfileContent() {
             if (user) updateUser({ ...user, two_factor_enabled: true });
         } catch (error) {
             console.error('2FA complete error', error);
-            alert('Invalid code');
+            alert(t.profile.security.twoFactor.verifyError);
         }
     };
 
     const disable2fa = async () => {
-        if (!confirm('Are you sure you want to disable 2FA?')) return;
+        if (!confirm(t.profile.security.twoFactor.disableConfirm)) return;
         try {
             const token = Cookies.get('token');
-            const code = prompt('Enter your 2FA code or Password to confirm:');
+            const code = prompt(t.profile.security.twoFactor.disablePrompt);
             if (!code) return;
 
             const payload: any = {};
@@ -189,15 +189,15 @@ function ProfileContent() {
             if (!res.ok) throw new Error('Failed to disable 2FA');
 
             if (user) updateUser({ ...user, two_factor_enabled: false });
-            alert('2FA Disabled');
+            alert(t.profile.security.twoFactor.disableSuccess);
         } catch (error) {
             console.error('Disable 2FA error', error);
-            alert('Failed to disable 2FA. Ensure code/password is correct.');
+            alert(t.profile.security.twoFactor.disableError);
         }
     };
 
     const regenerateRecoveryCodes = async () => {
-        if (!confirm('This will invalidate old codes. Continue?')) return;
+        if (!confirm(t.profile.security.twoFactor.regenerateConfirm)) return;
         try {
             const token = Cookies.get('token');
             const res = await fetch('/api/auth/2fa/recovery-codes', {
@@ -209,7 +209,7 @@ function ProfileContent() {
             setRecoveryCodes(data.recovery_codes);
         } catch (error) {
             console.error('Regenerate error', error);
-            alert('Failed to regenerate codes');
+            alert(t.profile.security.twoFactor.regenerateError);
         }
     };
 
@@ -260,7 +260,7 @@ function ProfileContent() {
                                     <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
-                                    Security
+                                    {t.profile.tabs.security}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('api')}
@@ -398,28 +398,28 @@ function ProfileContent() {
                             {activeTab === 'security' && (
                                 <div className="space-y-6">
                                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 p-6">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Two-Factor Authentication</h3>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t.profile.security.twoFactor.title}</h3>
 
                                         {user.two_factor_enabled ? (
                                             <div className="space-y-4">
                                                 <div className="flex items-center text-green-600 dark:text-green-400">
                                                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                                    2FA is currently enabled for your account.
+                                                    {t.profile.security.twoFactor.enabled}
                                                 </div>
                                                 <div className="flex gap-4">
                                                     <button onClick={disable2fa} className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400">
-                                                        Disable 2FA
+                                                        {t.profile.security.twoFactor.disableButton}
                                                     </button>
                                                     <button onClick={regenerateRecoveryCodes} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300">
-                                                        Regenerate Recovery Codes
+                                                        {t.profile.security.twoFactor.regenerateButton}
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="space-y-4">
-                                                <p className="text-gray-500 dark:text-gray-400">Secure your account with TOTP (Google Authenticator, Authy, etc.).</p>
+                                                <p className="text-gray-500 dark:text-gray-400">{t.profile.security.twoFactor.disabled}</p>
                                                 <button onClick={start2faSetup} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                                                    Enable 2FA
+                                                    {t.profile.security.twoFactor.enableButton}
                                                 </button>
                                             </div>
                                         )}
@@ -427,19 +427,19 @@ function ProfileContent() {
 
                                     {is2faSetupOpen && !recoveryCodes && qrCodeUrl && (
                                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 p-6">
-                                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Setup 2FA</h3>
+                                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">{t.profile.security.twoFactor.setupTitle}</h3>
                                             <div className="flex flex-col items-center">
                                                 <img src={qrCodeUrl} alt="QR Code" className="mb-4 bg-white p-2 rounded" />
-                                                <p className="mb-2 text-sm text-gray-500">Or enter secret: <code className="bg-gray-100 dark:bg-gray-900 px-1 py-0.5 rounded">{setupSecret}</code></p>
+                                                <p className="mb-2 text-sm text-gray-500">{t.profile.security.twoFactor.enterSecret} <code className="bg-gray-100 dark:bg-gray-900 px-1 py-0.5 rounded">{setupSecret}</code></p>
                                                 <input
                                                     type="text"
                                                     value={setupCode}
                                                     onChange={e => setSetupCode(e.target.value)}
-                                                    placeholder="Enter 6-digit code"
+                                                    placeholder="123456"
                                                     className="mb-4 px-4 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
                                                 />
                                                 <button onClick={complete2faSetup} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                                    Verify & Enable
+                                                    {t.profile.security.twoFactor.verifyButton}
                                                 </button>
                                             </div>
                                         </div>
@@ -447,10 +447,10 @@ function ProfileContent() {
 
                                     {recoveryCodes && (
                                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-yellow-100 dark:border-yellow-900/30 p-6">
-                                            <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-400 mb-2">Recovery Codes</h3>
+                                            <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-400 mb-2">{t.profile.security.twoFactor.recoveryCodesTitle}</h3>
                                             <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
-                                                Save these codes in a safe place. They are the only way to access your account if you lose your 2FA device.
-                                                <br /><strong>These codes will not be shown again.</strong>
+                                                {t.profile.security.twoFactor.recoveryCodesDescription}
+                                                <br /><strong>{t.profile.security.twoFactor.recoveryCodesWarning}</strong>
                                             </p>
                                             <div className="grid grid-cols-2 gap-2 font-mono bg-gray-50 dark:bg-gray-900 p-4 rounded-md">
                                                 {recoveryCodes.map(code => (
@@ -458,7 +458,7 @@ function ProfileContent() {
                                                 ))}
                                             </div>
                                             <button onClick={() => setRecoveryCodes(null)} className="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200">
-                                                I have saved them
+                                                {t.profile.security.twoFactor.savedButton}
                                             </button>
                                         </div>
                                     )}

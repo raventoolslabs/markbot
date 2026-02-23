@@ -10,6 +10,52 @@ export const es = {
         start: 'Inicia una conversación con Mark...',
         error: 'Error conectando con el servidor.',
     },
+    auth: {
+        login: {
+            title: 'Iniciar Sesión',
+            submit: 'Entrar',
+            noAccount: "¿No tienes una cuenta?",
+            signUpLink: 'Regístrate',
+        },
+        register: {
+            title: 'Crear Cuenta',
+            submit: 'Registrarse',
+            hasAccount: "¿Ya tienes una cuenta?",
+            signInLink: 'Inicia sesión',
+            nameLabel: 'Nombre',
+            namePlaceholder: 'Tu Nombre',
+        },
+        twoFactor: {
+            title: 'Autenticación de Dos Factores',
+            label: 'Código de Autenticador',
+            placeholder: '123456',
+            submit: 'Verificar',
+        },
+        verifyEmail: {
+            title: 'Verificar Email',
+            label: 'Código de Verificación',
+            placeholder: '123456',
+            submitRequest: 'Enviar Código',
+            submitVerify: 'Verificar',
+            resend: 'Reenviar Código',
+            logout: 'Cerrar sesión',
+            sentMessage: 'Enviamos un código a',
+            checkInbox: 'Por favor revisa tu bandeja de entrada.',
+            requestMessage: 'Por favor verifica tu dirección de email:',
+            clickBelow: 'Haz clic abajo para recibir un código de verificación.',
+            resendSuccess: 'Nuevo código enviado a',
+            resendError: 'Error al reenviar código',
+        },
+        common: {
+            emailLabel: 'Email',
+            emailPlaceholder: 'tu@ejemplo.com',
+            passwordLabel: 'Contraseña',
+            passwordPlaceholder: '••••••••',
+            loading: 'Cargando...',
+            orContinue: 'O continúa con',
+            error: 'Autenticación fallida',
+        }
+    },
     nav: {
         home: 'Inicio',
         chat: 'Chat',
@@ -19,6 +65,7 @@ export const es = {
     userMenu: {
         profile: 'Mi Perfil',
         account: 'Cuenta',
+        security: 'Seguridad',
         apiKey: 'Clave API',
         logout: 'Cerrar sesión',
     },
@@ -68,6 +115,7 @@ export const es = {
     profile: {
         tabs: {
             account: 'Cuenta',
+            security: 'Seguridad',
             api: 'Clave API',
         },
         account: {
@@ -84,6 +132,33 @@ export const es = {
             cancel: 'Cancelar',
             changePhoto: 'Cambiar',
             userId: 'ID de Usuario',
+        },
+        security: {
+            title: 'Seguridad',
+            twoFactor: {
+                title: 'Autenticación de Dos Factores',
+                enabled: '2FA está habilitado actualmente para tu cuenta.',
+                disabled: 'Protege tu cuenta con TOTP (Google Authenticator, Authy, etc.).',
+                enableButton: 'Habilitar 2FA',
+                disableButton: 'Deshabilitar 2FA',
+                regenerateButton: 'Regenerar Códigos de Recuperación',
+                setupTitle: 'Configurar 2FA',
+                scanQr: 'Escanea el código QR con tu aplicación de autenticación.',
+                enterSecret: 'O introduce el secreto:',
+                verifyButton: 'Verificar y Habilitar',
+                recoveryCodesTitle: 'Códigos de Recuperación',
+                recoveryCodesDescription: 'Guarda estos códigos en un lugar seguro. Son la única forma de acceder a tu cuenta si pierdes tu dispositivo 2FA.',
+                recoveryCodesWarning: 'Estos códigos no se mostrarán de nuevo.',
+                savedButton: 'Los he guardado',
+                disableConfirm: '¿Estás seguro de que quieres deshabilitar 2FA?',
+                disablePrompt: 'Introduce tu código 2FA o Contraseña para confirmar:',
+                disableSuccess: '2FA Deshabilitado',
+                disableError: 'Error al deshabilitar 2FA. Asegúrate de que el código/contraseña sea correcto.',
+                regenerateConfirm: 'Esto invalidará los códigos antiguos. ¿Continuar?',
+                regenerateError: 'Error al regenerar códigos',
+                setupError: 'Error al iniciar configuración 2FA',
+                verifyError: 'Código inválido',
+            }
         },
         api: {
             title: 'Gestor de Clave API',
