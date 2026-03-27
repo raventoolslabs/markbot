@@ -1,19 +1,23 @@
 import { managerDb } from '@/infrastructure/db/client';
 import { UserVerificationCodeRow } from '../schema/UserVerificationCodeRow';
-import { Selectable } from 'kysely';
+import { VerificationCode } from '@/domain/entities/VerificationCode';
+import { VerificationCodeRepository } from '@/app/ports/repositories/verification-code.repository';
+import { mapVerificationCodeRowToEntity, mapEntityToVerificationCodeRow } from '../mappers/verification-code.mapper';
 
-export class VerificationCodeRepository {
-    async create(data: Omit<UserVerificationCodeRow, 'id' | 'created_at'>): Promise<Selectable<UserVerificationCodeRow>> {
-        return await managerDb.db
+export class PgVerificationCodeRepository implements VerificationCodeRepository {
+    async create(data: Omit<VerificationCode, 'id' | 'createdAt'>): Promise<VerificationCode> {
+        const rowData = mapEntityToVerificationCodeRow(data);
+        const row = await managerDb.db
             .withSchema('markbot')
             .insertInto('user_verification_code')
-            .values(data)
+            .values(rowData)
             .returningAll()
             .executeTakeFirstOrThrow();
+        return mapVerificationCodeRowToEntity(row);
     }
 
-    async findValidCode(userId: string, code: string, type: 'EMAIL_VERIFICATION' | 'PASSWORD_RESET'): Promise<Selectable<UserVerificationCodeRow> | undefined> {
-        return await managerDb.db
+    async findValidCode(userId: string, code: string, type: 'EMAIL_VERIFICATION' | 'PASSWORD_RESET'): Promise<VerificationCode | undefined> {
+        const row = await managerDb.db
             .withSchema('markbot')
             .selectFrom('user_verification_code')
             .selectAll()
@@ -22,6 +26,7 @@ export class VerificationCodeRepository {
             .where('type', '=', type)
             .where('expires_at', '>', new Date())
             .executeTakeFirst();
+        return row ? mapVerificationCodeRowToEntity(row) : undefined;
     }
 
     async deleteCode(id: string): Promise<void> {
@@ -42,4 +47,4 @@ export class VerificationCodeRepository {
     }
 }
 
-export const verificationCodeRepository = new VerificationCodeRepository();
+export const verificationCodeRepository = new PgVerificationCodeRepository();

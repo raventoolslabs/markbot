@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
+import { ArrowLeftIcon, BuildingIcon, CalendarIcon } from '@/components/Icons';
 
 interface DocumentChunk {
     id: string;
@@ -19,7 +20,7 @@ interface DocumentDetail {
     id: string;
     path: string;
     organization: string;
-    creation_date: string;
+    creationDate: string;
     metadata: any;
     chunks: DocumentChunk[];
 }
@@ -85,9 +86,7 @@ export default function DocumentDetailPage() {
             <main className="container mx-auto px-4 py-8 max-w-6xl">
                 <div className="mb-8">
                     <Link href="/documents" className="flex items-center text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 mb-4 transition-colors font-medium">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
+                        <ArrowLeftIcon className="h-5 w-5 mr-1" />
                         {t.documents.backToDocs}
                     </Link>
 
@@ -96,16 +95,12 @@ export default function DocumentDetailPage() {
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 break-all">{document.path}</h1>
                             <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                 <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                    </svg>
+                                    <BuildingIcon className="h-4 w-4" />
                                     {document.organization}
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    {new Date(document.creation_date).toLocaleString()}
+                                    <CalendarIcon className="h-4 w-4" />
+                                    {new Date(document.creationDate).toLocaleString()}
                                 </span>
                                 <span className="font-mono text-xs opacity-70">ID: {document.id}</span>
                             </div>

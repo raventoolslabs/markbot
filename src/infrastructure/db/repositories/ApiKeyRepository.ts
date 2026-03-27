@@ -1,11 +1,14 @@
 import { Kysely } from 'kysely';
 import { Database } from '../schema/Database';
 import { ApiKey, CreateApiKeyDTO } from '../../../domain/entities/ApiKey';
+import { ApiKeyRepository } from '@/app/ports/repositories/api-key.repository';
+import { mapApiKeyRowToApiKey } from '../mappers/api-key.mapper';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
+import { managerDb } from '../client';
 
-export class ApiKeyRepository {
-    constructor(private db: Kysely<Database>) { }
+export class PgApiKeyRepository implements ApiKeyRepository {
+    constructor(private db: Kysely<Database> = managerDb.db) { }
 
     async create(data: CreateApiKeyDTO): Promise<{ apiKey: ApiKey; keySecret: string }> {
         const keySecret = 'mk_' + crypto.randomBytes(24).toString('hex');
@@ -31,15 +34,7 @@ export class ApiKeyRepository {
             .execute();
 
         return {
-            apiKey: {
-                id: row.id,
-                userId: row.user_id,
-                name: row.name,
-                prefix: row.prefix,
-                expirationDate: row.expiration_date,
-                domain: row.domain,
-                createdAt: row.created_at,
-            },
+            apiKey: mapApiKeyRowToApiKey(row),
             keySecret,
         };
     }
@@ -53,15 +48,7 @@ export class ApiKeyRepository {
             .orderBy('created_at', 'desc')
             .execute();
 
-        return rows.map(row => ({
-            id: row.id,
-            userId: row.user_id,
-            name: row.name,
-            prefix: row.prefix,
-            expirationDate: row.expiration_date,
-            domain: row.domain,
-            createdAt: row.created_at,
-        }));
+        return rows.map(mapApiKeyRowToApiKey);
     }
 
     async delete(id: string, userId: string): Promise<boolean> {
@@ -85,14 +72,8 @@ export class ApiKeyRepository {
 
         if (!row) return null;
 
-        return {
-            id: row.id,
-            userId: row.user_id,
-            name: row.name,
-            prefix: row.prefix,
-            expirationDate: row.expiration_date,
-            domain: row.domain,
-            createdAt: row.created_at,
-        };
+        return mapApiKeyRowToApiKey(row);
     }
 }
+
+export const apiKeyRepository = new PgApiKeyRepository();

@@ -1,23 +1,29 @@
 import { Request, Response } from 'express';
-import { userAssetRepository } from '@/infrastructure/db/repositories/user-asset.repository';
-import { userRepository } from '@/infrastructure/db/repositories/user.repository';
 import { logger } from '@/infrastructure/logging/logger';
-import { config } from '@/app/config';
+
+import { userRepository } from '@/infrastructure/db/repositories/user.repository';
+import { userAssetRepository } from '@/infrastructure/db/repositories/user-asset.repository';
+
+import { GetUserImageHandler } from '@/app/use-cases/users/queries/get-user-image.handler';
+import { UpdateUserHandler } from '@/app/use-cases/users/commands/update-user.handler';
+import { DeleteUserHandler } from '@/app/use-cases/users/commands/delete-user.handler';
+
+const getUserImageHandler = new GetUserImageHandler(userAssetRepository);
+const updateUserHandler = new UpdateUserHandler(userRepository, userAssetRepository);
+const deleteUserHandler = new DeleteUserHandler(userRepository, userAssetRepository);
 
 export const getUserImage = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
+        const result = await getUserImageHandler.execute({ userId });
 
-        const asset = await userAssetRepository.findByUserId(userId);
-
-        if (!asset) {
+        if (!result) {
             res.status(404).json({ message: 'User image not found' });
             return;
         }
 
-        const buffer = Buffer.from(asset.content, 'base64');
-
-        res.set('Content-Type', asset.mime_type || 'image/jpeg');
+        const buffer = Buffer.from(result.content, 'base64');
+        res.set('Content-Type', result.mimeType);
         res.set('Content-Length', buffer.length.toString());
         res.send(buffer);
     } catch (error) {
@@ -32,56 +38,32 @@ export const updateUser = async (req: Request, res: Response) => {
         const { name } = req.body;
         const file = req.file;
 
-        const user = await userRepository.findByEmail((req as any).user.email); // Assuming auth middleware populates user
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const requestingUserEmail = (req as any).user.email;
 
-        if (!user || user.id !== userId) {
-            res.status(403).json({ message: 'Unauthorized' });
-            return;
-        }
-
-        if (name) {
-            await userRepository.update(userId, { name });
-        }
-
-        if (file) {
-            const content = file.buffer.toString('base64');
-            const mimeType = file.mimetype;
-
-            // Check if asset exists to update or create
-            const existingAsset = await userAssetRepository.findByUserId(userId);
-
-            if (existingAsset) {
-                await userAssetRepository.update(userId, {
-                    content,
-                    mime_type: mimeType,
-                    asset_name: 'profile_picture', // Ensure name is consistent
-                    metadata: { ...existingAsset.metadata, source: 'upload', updated: new Date() }
-                });
-            } else {
-                await userAssetRepository.create({
-                    user_id: userId,
-                    asset_type: 'image',
-                    asset_name: 'profile_picture',
-                    mime_type: mimeType,
-                    content,
-                    metadata: { source: 'upload' }
-                });
-            }
-        }
-
-        const updatedUser = await userRepository.findByEmail(user.email);
+        const result = await updateUserHandler.execute({
+            targetUserId: userId,
+            requestingUserEmail,
+            name,
+            file: file ? { buffer: file.buffer, mimetype: file.mimetype } : undefined
+        });
 
         res.json({
             user: {
-                id: updatedUser!.id,
-                email: updatedUser!.email,
-                name: updatedUser!.name,
-                picture: `/api/users/${updatedUser!.id}/image`, // Always return the endpoint
-                two_factor_enabled: updatedUser!.two_factor_enabled,
+                id: result.user.id,
+                email: result.user.email,
+                name: result.user.name,
+                picture: `/api/users/${result.user.id}/image`,
+                two_factor_enabled: result.user.twoFactorEnabled,
             }
         });
 
-    } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+        if (error.message === 'Unauthorized') {
+            res.status(403).json({ message: 'Unauthorized' });
+            return;
+        }
         logger.error('Failed to update user', 'UsersController', error);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -90,24 +72,18 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
     try {
         const { userId } = req.params;
-        const user = await userRepository.findByEmail((req as any).user.email);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const requestingUserEmail = (req as any).user.email;
 
-        if (!user || user.id !== userId) {
+        await deleteUserHandler.execute({ targetUserId: userId, requestingUserEmail });
+
+        res.status(200).json({ message: 'User deleted successfully' });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+        if (error.message === 'Unauthorized') {
             res.status(403).json({ message: 'Unauthorized' });
             return;
         }
-
-        // Delete user assets first (although foreign key cascade should handle it ideally, explicit is safer if not configured)
-        // Check schema first. Assuming cascade might not be set for everything or we want to be sure.
-        // Actually, let's rely on DB cascade if possible, but we don't know if it's set.
-        // Let's safe delete assets.
-        await userAssetRepository.deleteByUserId(userId);
-
-        // Delete user
-        await userRepository.delete(userId);
-
-        res.status(200).json({ message: 'User deleted successfully' });
-    } catch (error) {
         logger.error('Failed to delete user', 'UsersController', error);
         res.status(500).json({ message: 'Internal server error' });
     }

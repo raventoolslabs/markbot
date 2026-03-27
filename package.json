@@ -8,7 +8,7 @@
         "server": "PORT=3002 NODE_OPTIONS='--no-deprecation' nodemon --watch src -r tsconfig-paths/register src/app/index.ts",
         "client": "npm run dev --prefix web",
         "dev": "concurrently --hide 1,2 --prefix none --kill-others --handle-input \"npm run server\" \"npm run client\" \"lt --port 3002 --subdomain markbot\"",
-        "build": "tsc && tsc-alias && mkdir -p dist/infrastructure/db/scripts && cp -r src/infrastructure/db/scripts/sql dist/infrastructure/db/scripts/ && cp -r src/public dist/ && npm run build --prefix web",
+        "build": "tsc && tsc-alias && mkdir -p dist/infrastructure/db/scripts && cp -r src/infrastructure/db/scripts/sql dist/infrastructure/db/scripts/ && cp -r public dist/ && npm run build --prefix web",
         "test": "jest",
         "lint": "eslint \"src/**/*.ts\"",
         "format": "prettier --write \"src/**/*.ts\""

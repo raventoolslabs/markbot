@@ -1,6 +1,7 @@
 'use client';
 
 import { useLanguage } from '../context/LanguageContext';
+import { SpainFlagIcon, UKFlagIcon } from './Icons';
 
 export const LanguageToggle = () => {
     const { language, setLanguage } = useLanguage();
@@ -14,20 +15,11 @@ export const LanguageToggle = () => {
         >
             {language === 'es' ? (
                 <div className="w-6 h-6 rounded-sm shadow-sm overflow-hidden flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 500" preserveAspectRatio="xMidYMid slice" className="w-full h-full">
-                        <rect width="750" height="500" fill="#c60b1e" />
-                        <rect width="750" height="250" y="125" fill="#ffc400" />
-                    </svg>
+                    <SpainFlagIcon className="w-full h-full" />
                 </div>
             ) : (
                 <div className="w-6 h-6 rounded-sm shadow-sm overflow-hidden flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" className="w-full h-full scale-110">
-                        <rect width="60" height="30" fill="#012169" />
-                        <path d="M0 0l60 30M60 0L0 30" stroke="#fff" strokeWidth="6" />
-                        <path d="M0 0l60 30M60 0L0 30" stroke="#C8102E" strokeWidth="4" />
-                        <path d="M30 0v30M0 15h60" stroke="#fff" strokeWidth="10" />
-                        <path d="M30 0v30M0 15h60" stroke="#C8102E" strokeWidth="6" />
-                    </svg>
+                    <UKFlagIcon className="w-full h-full scale-110" />
                 </div>
             )}
         </button>

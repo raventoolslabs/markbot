@@ -1,24 +1,19 @@
 import { managerDb } from '@/infrastructure/db/client';
-import { DocumentAssetDto } from '@/api/http/types/DocumentAssetDto';
+import { DocumentChunkAsset } from '@/domain/entities/DocumentChunkAsset';
+import { DocumentChunkAssetRepository } from '@/app/ports/repositories/documentchunk-asset.repository';
+import { mapDocumentChunkAssetRowToEntity, mapEntityToDocumentChunkAssetRow } from '../mappers/documentchunk-asset.mapper';
 
-export class DocumentChunkAssetRepository {
-  async create(asset: DocumentAssetDto): Promise<void> {
+export class PgDocumentChunkAssetRepository implements DocumentChunkAssetRepository {
+  async create(asset: DocumentChunkAsset): Promise<void> {
+    const row = mapEntityToDocumentChunkAssetRow(asset);
     await managerDb.db
       .withSchema('markbot')
       .insertInto('documentchunkasset')
-      .values({
-        document_id: asset.document_id,
-        chunk_id: asset.chunk_id || null,
-        asset_type: asset.asset_type,
-        asset_name: asset.asset_name,
-        mime_type: asset.mime_type || null,
-        content: asset.content,
-        metadata: JSON.stringify(asset.metadata || {}),
-      })
+      .values(row)
       .execute();
   }
 
-  async getByChunkId(chunkId: number): Promise<DocumentAssetDto[]> {
+  async getByChunkId(chunkId: number): Promise<DocumentChunkAsset[]> {
     const results = await managerDb.db
       .withSchema('markbot')
       .selectFrom('documentchunkasset')
@@ -26,20 +21,10 @@ export class DocumentChunkAssetRepository {
       .where('chunk_id', '=', chunkId)
       .execute();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((row: any) => ({
-      id: Number(row.id),
-      document_id: row.document_id,
-      chunk_id: row.chunk_id ? Number(row.chunk_id) : undefined,
-      asset_type: row.asset_type as 'image' | 'file',
-      asset_name: row.asset_name,
-      mime_type: row.mime_type || undefined,
-      content: row.content,
-      metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata,
-    }));
+    return results.map(mapDocumentChunkAssetRowToEntity);
   }
 
-  async getByDocumentId(documentId: string): Promise<DocumentAssetDto[]> {
+  async getByDocumentId(documentId: string): Promise<DocumentChunkAsset[]> {
     const results = await managerDb.db
       .withSchema('markbot')
       .selectFrom('documentchunkasset')
@@ -47,17 +32,7 @@ export class DocumentChunkAssetRepository {
       .where('document_id', '=', documentId)
       .execute();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.map((row: any) => ({
-      id: Number(row.id),
-      document_id: row.document_id,
-      chunk_id: row.chunk_id ? Number(row.chunk_id) : undefined,
-      asset_type: row.asset_type as 'image' | 'file',
-      asset_name: row.asset_name,
-      mime_type: row.mime_type || undefined,
-      content: row.content,
-      metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata,
-    }));
+    return results.map(mapDocumentChunkAssetRowToEntity);
   }
 
   async deleteByDocumentId(documentId: string): Promise<void> {
@@ -69,4 +44,4 @@ export class DocumentChunkAssetRepository {
   }
 }
 
-export const documentChunkAssetRepository = new DocumentChunkAssetRepository();
+export const documentChunkAssetRepository = new PgDocumentChunkAssetRepository();

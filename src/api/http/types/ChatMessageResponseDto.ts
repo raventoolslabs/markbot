@@ -6,5 +6,8 @@ export interface ChatMessageResponseDto {
     data: string; // base64
   }>;
   cards?: unknown[];
-  metadata?: Record<string, unknown>;
+  metadata?: {
+    sources?: Array<{ document: string; section: string }>;
+    [key: string]: unknown;
+  };
 }

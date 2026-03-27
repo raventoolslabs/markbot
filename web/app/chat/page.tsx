@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
+import { MinimizeIcon, MaximizeIcon, XIcon, InfoIcon, SendIcon } from '@/components/Icons';
 
 type Message = {
     role: 'user' | 'bot';
@@ -16,6 +17,7 @@ type Message = {
         mimeType: string;
         data: string; // base64
     }>;
+    sources?: Array<{ document: string; section: string }>;
 };
 
 type SelectedImage = {
@@ -140,7 +142,8 @@ function ChatContent() {
             const botMessage: Message = {
                 role: 'bot',
                 content: data.response || data.text,
-                images: data.images || []
+                images: data.images || [],
+                sources: data.metadata?.sources || []
             };
             setMessages(prev => [...prev, botMessage]);
         } catch (error) {
@@ -197,13 +200,9 @@ function ChatContent() {
                         title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
                     >
                         {isFullScreen ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                            </svg>
+                            <MinimizeIcon />
                         ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                            </svg>
+                            <MaximizeIcon />
                         )}
                     </button>
                     <button
@@ -211,7 +210,7 @@ function ChatContent() {
                         className="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 transition-colors"
                         title="Close Chat"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <XIcon />
                     </button>
                 </div>
             )}
@@ -262,7 +261,7 @@ function ChatContent() {
                                                                 />
                                                             </div>
                                                             <div className="w-full px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center font-medium truncate flex items-center justify-center gap-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+                                                                <MaximizeIcon width="12" height="12" />
                                                                 {imgData.name}
                                                             </div>
                                                         </div>
@@ -274,6 +273,28 @@ function ChatContent() {
                                     >
                                         {msg.content}
                                     </ReactMarkdown>
+
+                                    {/* Tooltip for sources */}
+                                    {msg.sources && msg.sources.length > 0 && (
+                                        <div className="mt-2 flex justify-end">
+                                            <div className="relative group inline-block">
+                                                <InfoIcon className="w-5 h-5 text-gray-400 hover:text-emerald-500 cursor-help transition-colors" />
+                                                
+                                                <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-80 sm:w-96 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl z-10 before:content-[''] before:absolute before:top-full before:right-2 before:border-4 before:border-transparent before:border-t-gray-900 pointer-events-none">
+                                                    <div className="font-semibold mb-1 border-b border-gray-700 pb-1">Fuentes consultadas:</div>
+                                                    <ul className="space-y-1.5 pr-1 mt-1.5">
+                                                        {msg.sources.map((src: any, srcIdx: number) => (
+                                                            <li key={srcIdx} className="break-words">
+                                                                <span className="font-medium text-emerald-400">{src.document}</span>
+                                                                <br />
+                                                                <span className="opacity-80 text-[10px] uppercase">Sección: {src.section}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
@@ -316,7 +337,7 @@ function ChatContent() {
                             onClick={() => setSelectedImage(null)}
                             className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors bg-white/10 hover:bg-white/20 rounded-full p-2 backdrop-blur-md"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            <XIcon width="24" height="24" />
                         </button>
                         <img
                             src={selectedImage.src}
@@ -351,10 +372,7 @@ function ChatContent() {
                             disabled={isLoading || !input.trim()}
                             className="bg-emerald-800 hover:bg-emerald-700 text-white p-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all aspect-square flex items-center justify-center shadow-md shrink-0"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="22" y1="2" x2="11" y2="13"></line>
-                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                            </svg>
+                            <SendIcon />
                         </button>
                     </div>
                     {!isEmbed && (

@@ -1,31 +1,38 @@
 import { managerDb } from '@/infrastructure/db/client';
 import { sql } from 'kysely';
-import { SearchResultDto } from '@/api/http/types/SearchResultDto';
+import { SearchResult } from '@/domain/entities/SearchResult';
+import { DocumentChunk } from '@/domain/entities/DocumentChunk';
+import { DocumentChunkRepository } from '@/app/ports/repositories/document-chunk.repository';
+import { mapDocumentChunkRowToDocumentChunk, mapDocumentChunkToDocumentChunkRow } from '../mappers/document-chunk.mapper';
 
-export class DocumentChunkRepository {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async create(chunk: any): Promise<{ id: number }> {
+export class PgDocumentChunkRepository implements DocumentChunkRepository {
+  async create(chunk: DocumentChunk): Promise<{ id: number }> {
+    const row = mapDocumentChunkToDocumentChunkRow(chunk);
+    // don't insert ID if it's missing or we expect DB to sequence it
+    if (!row.id) delete row.id;
+
     const result = await managerDb.db
       .withSchema('markbot')
       .insertInto('documentchunk')
-      .values(chunk)
+      .values(row)
       .returning('id')
       .executeTakeFirstOrThrow();
 
     return { id: Number(result.id) };
   }
 
-  async getByDocumentId(documentId: string) {
-    return await managerDb.db
+  async getByDocumentId(documentId: string): Promise<DocumentChunk[]> {
+    const rows = await managerDb.db
       .withSchema('markbot')
       .selectFrom('documentchunk')
-      .select(['id', 'content', 'metadata'])
+      .select(['id', 'content', 'metadata', 'document_id', 'embedding'])
       .where('document_id', '=', documentId)
       .orderBy('id', 'asc')
       .execute();
+    return rows.map(mapDocumentChunkRowToDocumentChunk);
   }
 
-  async search(vectorString: string, limit: number) {
+  async search(vectorString: string, limit: number): Promise<SearchResult[]> {
     const results = await managerDb.db
       .withSchema('markbot')
       .selectFrom('documentchunk as c')
@@ -46,16 +53,15 @@ export class DocumentChunkRepository {
     const { documentChunkAssetRepository } = await import('./documentchunk-asset.repository');
 
     // Fetch assets for each chunk
-    const resultsWithAssets: SearchResultDto[] = await Promise.all(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resultsWithAssets: SearchResult[] = await Promise.all(
       results.map(async (row: any) => {
-        const assets = await documentChunkAssetRepository.getByChunkId(row.id);
+        const assets = await documentChunkAssetRepository.getByChunkId(Number(row.id));
         return {
           id: Number(row.id),
           content: row.content,
           metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata || {},
-          source_path: row.source_path,
-          document_id: row.document_id,
+          sourcePath: row.source_path,
+          documentId: row.document_id,
           similarity: Number(row.similarity),
           assets,
         };
@@ -66,4 +72,4 @@ export class DocumentChunkRepository {
   }
 }
 
-export const documentChunkRepository = new DocumentChunkRepository();
+export const documentChunkRepository = new PgDocumentChunkRepository();

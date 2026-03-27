@@ -8,7 +8,6 @@ export interface UserRow {
     password_hash: string | null;
     password_set_at: Date | null;
     password_changed_at: Date | null;
-    email_verified: boolean;
     failed_login_count: number;
     last_failed_login_at: Date | null;
     locked_until: Date | null;
@@ -16,4 +15,5 @@ export interface UserRow {
     two_factor_enrolled_at: Date | null;
     two_factor_secret: string | null;
     verified_at: Date | null;
+    email_verified?: boolean;
 }

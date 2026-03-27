@@ -1,31 +1,40 @@
 import { managerDb } from '@/infrastructure/db/client';
 import { User2faTotpRow } from '../schema/User2faTotpRow';
+import { User2faTotp } from '@/domain/entities/User2faTotp';
+import { User2faTotpRepository } from '@/app/ports/repositories/user-2fa-totp.repository';
+import { mapUser2faTotpRowToUser2faTotp, mapUser2faTotpToUser2faTotpRow } from '../mappers/user-2fa-totp.mapper';
 
-export class User2faTotpRepository {
-    async findByUserId(userId: string): Promise<User2faTotpRow | undefined> {
-        return await managerDb.db
+export class PgUser2faTotpRepository implements User2faTotpRepository {
+    async findByUserId(userId: string): Promise<User2faTotp | undefined> {
+        const row = await managerDb.db
             .withSchema('markbot')
             .selectFrom('user_2fa_totp')
             .selectAll()
             .where('user_id', '=', userId)
             .executeTakeFirst();
+        return row ? mapUser2faTotpRowToUser2faTotp(row) : undefined;
     }
 
-    async create(data: User2faTotpRow): Promise<User2faTotpRow> {
+    async create(data: User2faTotp): Promise<User2faTotp> {
+        const row = mapUser2faTotpToUser2faTotpRow(data);
         await managerDb.db
             .withSchema('markbot')
             .insertInto('user_2fa_totp')
-            .values(data)
+            .values(row)
             .execute();
         return data;
     }
 
-    async update(userId: string, data: Partial<User2faTotpRow>): Promise<void> {
+    async update(userId: string, data: Partial<User2faTotp>): Promise<void> {
+        const updateData: Partial<User2faTotpRow> = {};
+        if (data.secretEncrypted !== undefined) updateData.secret_encrypted = data.secretEncrypted;
+        if (data.verifiedAt !== undefined) updateData.verified_at = data.verifiedAt;
+        if (data.lastUsedAt !== undefined) updateData.last_used_at = data.lastUsedAt;
+
         await managerDb.db
             .withSchema('markbot')
             .updateTable('user_2fa_totp')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .set(data as any)
+            .set(updateData)
             .where('user_id', '=', userId)
             .execute();
     }
@@ -39,4 +48,4 @@ export class User2faTotpRepository {
     }
 }
 
-export const user2faTotpRepository = new User2faTotpRepository();
+export const user2faTotpRepository = new PgUser2faTotpRepository();

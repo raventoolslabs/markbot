@@ -8,6 +8,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { UploadModal } from '@/components/UploadModal';
 import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
+import { UploadIcon, DocumentIcon, EyeIcon, TrashIcon } from '@/components/Icons';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,7 +16,7 @@ interface Document {
     id: string;
     path: string;
     organization: string;
-    creation_date: string;
+    creationDate: string;
     metadata: any;
 }
 
@@ -125,9 +126,7 @@ export default function DocumentsPage() {
                         onClick={() => setIsUploadModalOpen(true)}
                         className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition-colors flex items-center gap-2 font-medium"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
+                        <UploadIcon className="h-5 w-5" />
                         {t.documents.uploadButton}
                     </button>
                 </div>
@@ -148,9 +147,7 @@ export default function DocumentsPage() {
                 {!loading && !error && documents.length === 0 && (
                     <div className="text-center py-16 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-800">
                         <div className="text-gray-400 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                            <DocumentIcon className="h-16 w-16 mx-auto" strokeWidth={1} />
                         </div>
                         <p className="text-gray-500 dark:text-gray-400">{t.documents.noDocuments}</p>
                     </div>
@@ -181,9 +178,7 @@ export default function DocumentsPage() {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg mr-4">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
+                                                    <DocumentIcon className="h-6 w-6" strokeWidth={2} />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">{doc.path}</div>
@@ -197,24 +192,23 @@ export default function DocumentsPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {format(new Date(doc.creation_date), 'MMM d, yyyy')}
+                                            {format(new Date(doc.creationDate), 'MMM d, yyyy')}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                                             <div className="flex items-center justify-end gap-3">
                                                 <Link
                                                     href={`/documents/${doc.id}`}
-                                                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-medium transition-colors"
+                                                    className="text-gray-400 hover:text-emerald-600 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                    title={t.documents.viewDetails}
                                                 >
-                                                    {t.documents.viewDetails}
+                                                    <EyeIcon className="h-5 w-5" />
                                                 </Link>
                                                 <button
                                                     onClick={() => handleDeleteClick(doc)}
                                                     className="text-gray-400 hover:text-red-600 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                                                     title={t.delete.title}
                                                 >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
+                                                    <TrashIcon className="h-5 w-5" />
                                                 </button>
                                             </div>
                                         </td>

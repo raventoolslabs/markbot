@@ -1,23 +1,20 @@
 import { managerDb } from '@/infrastructure/db/client';
-import { UserAssetRow } from '@/infrastructure/db/schema/UserAssetRow';
+import { UserAsset } from '@/domain/entities/UserAsset';
+import { UserAssetRepository } from '@/app/ports/repositories/user-asset.repository';
+import { mapUserAssetRowToUserAsset, mapUserAssetToUserAssetRow } from '../mappers/user-asset.mapper';
+import { UserAssetRow } from '../schema/UserAssetRow';
 
-export class UserAssetRepository {
-    async create(asset: UserAssetRow): Promise<void> {
+export class PgUserAssetRepository implements UserAssetRepository {
+    async create(asset: UserAsset): Promise<void> {
+        const row = mapUserAssetToUserAssetRow(asset);
         await managerDb.db
             .withSchema('markbot')
             .insertInto('userasset')
-            .values({
-                user_id: asset.user_id,
-                asset_type: asset.asset_type,
-                asset_name: asset.asset_name,
-                mime_type: asset.mime_type || null,
-                content: asset.content,
-                metadata: JSON.stringify(asset.metadata || {}),
-            })
+            .values(row)
             .execute();
     }
 
-    async findByUserId(userId: string): Promise<UserAssetRow | undefined> {
+    async findByUserId(userId: string): Promise<UserAsset | undefined> {
         const result = await managerDb.db
             .withSchema('markbot')
             .selectFrom('userasset')
@@ -27,22 +24,21 @@ export class UserAssetRepository {
 
         if (!result) return undefined;
 
-        return {
-            ...result,
-            id: Number(result.id),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            metadata: typeof result.metadata === 'string' ? JSON.parse(result.metadata) : (result.metadata as any),
-        };
+        return mapUserAssetRowToUserAsset(result);
     }
 
-    async update(userId: string, asset: Partial<UserAssetRow>): Promise<void> {
+    async update(userId: string, asset: Partial<UserAsset>): Promise<void> {
+        const updateData: Partial<UserAssetRow> = {};
+        if (asset.assetType !== undefined) updateData.asset_type = asset.assetType;
+        if (asset.assetName !== undefined) updateData.asset_name = asset.assetName;
+        if (asset.mimeType !== undefined) updateData.mime_type = asset.mimeType;
+        if (asset.content !== undefined) updateData.content = asset.content;
+        if (asset.metadata !== undefined) updateData.metadata = typeof asset.metadata === 'string' ? asset.metadata : JSON.stringify(asset.metadata);
+
         await managerDb.db
             .withSchema('markbot')
             .updateTable('userasset')
-            .set({
-                ...asset,
-                metadata: asset.metadata ? JSON.stringify(asset.metadata) : undefined,
-            })
+            .set(updateData)
             .where('user_id', '=', userId)
             .execute();
     }
@@ -56,4 +52,4 @@ export class UserAssetRepository {
     }
 }
 
-export const userAssetRepository = new UserAssetRepository();
+export const userAssetRepository = new PgUserAssetRepository();

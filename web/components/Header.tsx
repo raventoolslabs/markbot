@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { Avatar } from './Avatar';
+import { UserIcon, LockIcon, KeyIcon, LoginIcon } from './Icons';
 
 export const Header = () => {
     const { t } = useLanguage();
@@ -94,9 +95,7 @@ const HeaderActions = () => {
                                         className={`${active ? 'bg-gray-50 dark:bg-gray-700/50' : ''
                                             } group flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 transition-colors`}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
+                                        <UserIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" />
                                         {t.userMenu.account}
                                     </Link>
                                 )}
@@ -108,9 +107,7 @@ const HeaderActions = () => {
                                         className={`${active ? 'bg-gray-50 dark:bg-gray-700/50' : ''
                                             } group flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 transition-colors`}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
+                                        <LockIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" />
                                         {t.userMenu.security}
                                     </Link>
                                 )}
@@ -122,9 +119,7 @@ const HeaderActions = () => {
                                         className={`${active ? 'bg-gray-50 dark:bg-gray-700/50' : ''
                                             } group flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 transition-colors`}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
+                                        <KeyIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-emerald-500 dark:text-gray-500 dark:group-hover:text-emerald-400 transition-colors" />
                                         {t.userMenu.apiKey}
                                     </Link>
                                 )}
@@ -159,9 +154,7 @@ const HeaderActions = () => {
                 className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white border border-white/10 backdrop-blur-sm"
                 title="Login"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
+                <LoginIcon className="w-5 h-5" />
             </button>
             <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
         </>

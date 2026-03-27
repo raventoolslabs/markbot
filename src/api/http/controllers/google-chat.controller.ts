@@ -1,11 +1,24 @@
 import { Request, Response } from 'express';
-import { googleChatService } from '@/app/services/googleChat.service';
 import { logger } from '@/infrastructure/logging/logger';
-import { chatController } from '@/api/http/controllers/chat.controller';
+
+import { GetGoogleChatAuthUrlHandler } from '@/app/use-cases/google-chat/queries/get-google-chat-auth-url.handler';
+import { HandleGoogleChatCallbackHandler } from '@/app/use-cases/google-chat/commands/handle-google-chat-callback.handler';
+import { ProcessGoogleChatMessageHandler } from '@/app/use-cases/google-chat/commands/process-google-chat-message.handler';
+
+import { HandleChatMessageHandler } from '@/app/use-cases/chat/commands/handle-chat-message.handler';
+import { SearchDocumentsHandler } from '@/app/use-cases/document/queries/search-documents.handler';
+import { documentChunkRepository } from '@/infrastructure/db/repositories/document-chunk.repository';
+
+const searchDocumentsHandler = new SearchDocumentsHandler(documentChunkRepository);
+const handleChatMessageHandler = new HandleChatMessageHandler(searchDocumentsHandler);
+
+const getGoogleChatAuthUrlHandler = new GetGoogleChatAuthUrlHandler();
+const handleGoogleChatCallbackHandler = new HandleGoogleChatCallbackHandler();
+const processGoogleChatMessageHandler = new ProcessGoogleChatMessageHandler(handleChatMessageHandler);
 
 export class GoogleChatController {
-  handleAuth(req: Request, res: Response) {
-    const url = googleChatService.getAuthUrl();
+  async handleAuth(req: Request, res: Response) {
+    const url = await getGoogleChatAuthUrlHandler.execute({});
     res.redirect(url);
   }
 
@@ -13,11 +26,12 @@ export class GoogleChatController {
     const { code } = req.query;
 
     if (!code || typeof code !== 'string') {
-      return res.status(400).send('Missing code');
+      res.status(400).send('Missing code');
+      return;
     }
 
     try {
-      await googleChatService.getToken(code);
+      await handleGoogleChatCallbackHandler.execute({ code });
       logger.info('OAuth callback successful', 'GoogleChatController');
       res.send('Authentication successful! You can now close this window.');
     } catch (error) {
@@ -27,65 +41,12 @@ export class GoogleChatController {
   }
 
   async handleMessage(req: Request, res: Response) {
-    const event = req.body;
-
-    const chatData = event.chat || {};
-    let eventType = null;
-
-    if (chatData.messagePayload) {
-      eventType = 'MESSAGE';
-    } else {
-      eventType = chatData.type;
-    }
-
-    logger.info(`Received event type: ${eventType}`, 'GoogleChatController');
-
-    if (eventType === 'MESSAGE') {
-      try {
-        // Extract message data focusing on messagePayload if available
-        const message = chatData.messagePayload?.message || event.message;
-        const space = chatData.messagePayload?.space || event.space;
-
-        let text = message?.text || '';
-
-        if (text.startsWith('@')) text = text.replace(/^@[^\s]+\s*/, '');
-
-        const userName = message?.sender?.displayName;
-        const userId = message?.sender?.name;
-        const spaceId = space?.name;
-
-        logger.debug(`Processing message from ${userName} (${userId}) in space ${spaceId}`, 'GoogleChatController');
-
-        if (!text && !chatData.messagePayload) {
-          return res.json({});
-        }
-
-        // Use the centralized chat controller
-        const response = await chatController.handleMessage({
-          text,
-          userName,
-          userId,
-          spaceId,
-          platform: 'google',
-        });
-
-        if (spaceId) {
-          logger.info(`Sending message back to space ${spaceId}`, 'GoogleChatController');
-
-          try {
-            await googleChatService.sendMessage(spaceId, response.text);
-          } catch (sendError) {
-            logger.error(`Error sending message via ChatService`, 'GoogleChatController', sendError);
-          }
-        }
-
-        res.json({});
-      } catch (error) {
-        logger.error('Error processing Google message', 'GoogleChatController', error);
-        res.json({});
-      }
-    } else {
-      logger.debug(`Unhandled event type: ${eventType}`, 'GoogleChatController');
+    try {
+      const event = req.body;
+      await processGoogleChatMessageHandler.execute({ event });
+      res.json({});
+    } catch (error) {
+      logger.error('Error handling message', 'GoogleChatController', error);
       res.json({});
     }
   }

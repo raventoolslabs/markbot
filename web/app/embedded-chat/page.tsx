@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
+import { CheckCircleSolidIcon } from '@/components/Icons';
 
 export default function EmbeddedChatPage() {
     const { user } = useAuth();
@@ -169,9 +170,7 @@ export default function EmbeddedChatPage() {
                                     </div>
 
                                     <div className="ml-11 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-800 flex gap-3 text-sm text-emerald-800 dark:text-emerald-200">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
+                                        <CheckCircleSolidIcon className="h-5 w-5 shrink-0" />
                                         <div>
                                             <strong>Widget Preview Active!</strong><br />
                                             Look at the bottom right of your screen. The widget has been injected for you to test right now.

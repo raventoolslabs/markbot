@@ -1,17 +1,23 @@
 import { Request, Response } from 'express';
-import { ApiKeyRepository } from '../../../infrastructure/db/repositories/ApiKeyRepository';
-import { managerDb } from '../../../infrastructure/db/client';
+import { apiKeyRepository } from '@/infrastructure/db/repositories/ApiKeyRepository';
+import { GetApiKeysHandler } from '@/app/use-cases/api-key/queries/get-api-keys.handler';
+import { CreateApiKeyHandler } from '@/app/use-cases/api-key/commands/create-api-key.handler';
+import { DeleteApiKeyHandler } from '@/app/use-cases/api-key/commands/delete-api-key.handler';
 
-const apiKeyRepository = new ApiKeyRepository(managerDb.db);
+const getApiKeysHandler = new GetApiKeysHandler(apiKeyRepository);
+const createApiKeyHandler = new CreateApiKeyHandler(apiKeyRepository);
+const deleteApiKeyHandler = new DeleteApiKeyHandler(apiKeyRepository);
 
 export const listApiKeys = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user?.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (req as any).user?.id || (req as any).user?.userId;
         if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
         }
 
-        const keys = await apiKeyRepository.findByUserId(userId);
+        const keys = await getApiKeysHandler.execute({ userId });
         res.json(keys);
     } catch (error) {
         console.error('Error listing API keys:', error);
@@ -21,17 +27,20 @@ export const listApiKeys = async (req: Request, res: Response) => {
 
 export const createApiKey = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user?.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (req as any).user?.id || (req as any).user?.userId;
         if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
         }
 
         const { name, expirationDate, domain } = req.body;
         if (!name) {
-            return res.status(400).json({ error: 'Name is required' });
+            res.status(400).json({ error: 'Name is required' });
+            return;
         }
 
-        const result = await apiKeyRepository.create({
+        const result = await createApiKeyHandler.execute({
             userId,
             name,
             expirationDate: expirationDate ? new Date(expirationDate) : undefined,
@@ -47,16 +56,19 @@ export const createApiKey = async (req: Request, res: Response) => {
 
 export const deleteApiKey = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user?.id;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const userId = (req as any).user?.id || (req as any).user?.userId;
         if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
         }
 
         const { id } = req.params;
-        const deleted = await apiKeyRepository.delete(id, userId);
+        const deleted = await deleteApiKeyHandler.execute({ id, userId });
 
         if (!deleted) {
-            return res.status(404).json({ error: 'API key not found' });
+            res.status(404).json({ error: 'API key not found' });
+            return;
         }
 
         res.json({ success: true });
