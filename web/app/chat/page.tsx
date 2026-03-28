@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
 import { MinimizeIcon, MaximizeIcon, XIcon, InfoIcon, SendIcon } from '@/components/Icons';
+import { config } from '@/config';
 
 type Message = {
     role: 'user' | 'bot';
@@ -217,10 +218,10 @@ function ChatContent() {
 
             <main ref={mainRef} className={`flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 w-full pb-8 scroll-smooth ${isEmbed ? 'bg-white' : 'max-w-5xl mx-auto bg-emerald-50/20 dark:bg-transparent'}`}>
                 {/* Logo and Welcome for Embed */}
-                {isEmbed && messages.length === 0 && (
+                {messages.length === 0 && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in zoom-in duration-500 mt-10">
                         <div className="w-16 h-16 flex items-center justify-center mb-2">
-                            <Image src="/img/logo-without-title.png" alt="Markbot" width={64} height={64} className="object-contain" />
+                            <Image src="/img/logo-without-title.png" alt={`${config.botName}bot`} width={64} height={64} className="object-contain" />
                         </div>
                         <p className="text-gray-500 text-sm max-w-xs">{t.chat.start}</p>
                     </div>
@@ -279,7 +280,7 @@ function ChatContent() {
                                         <div className="mt-2 flex justify-end">
                                             <div className="relative group inline-block">
                                                 <InfoIcon className="w-5 h-5 text-gray-400 hover:text-emerald-500 cursor-help transition-colors" />
-                                                
+
                                                 <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-80 sm:w-96 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl z-10 before:content-[''] before:absolute before:top-full before:right-2 before:border-4 before:border-transparent before:border-t-gray-900 pointer-events-none">
                                                     <div className="font-semibold mb-1 border-b border-gray-700 pb-1">Fuentes consultadas:</div>
                                                     <ul className="space-y-1.5 pr-1 mt-1.5">
@@ -377,7 +378,7 @@ function ChatContent() {
                     </div>
                     {!isEmbed && (
                         <div className="text-center mt-2 text-[10px] uppercase tracking-widest font-bold text-emerald-700/50 dark:text-gray-600">
-                            Markbot can make mistakes. Consider checking important information.
+                            {config.botName}bot can make mistakes. Consider checking important information.
                         </div>
                     )}
                 </form>

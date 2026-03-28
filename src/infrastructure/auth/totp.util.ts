@@ -16,7 +16,7 @@ export class TotpUtil {
     }
 
     static async generateQRCode(secret: string, email: string): Promise<string> {
-        const otpauth = authenticator.keyuri(email, 'MarkBot', secret);
+        const otpauth = authenticator.keyuri(email, config.botName, secret);
         return await QRCode.toDataURL(otpauth);
     }
 

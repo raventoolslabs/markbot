@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
+import { config } from '@/config';
 
 export const HomeContent = () => {
     const { t } = useLanguage();
@@ -15,7 +16,7 @@ export const HomeContent = () => {
                 <div className="relative w-72 h-72 sm:w-96 sm:h-96 mb-2 drop-shadow-2xl">
                     <Image
                         src="/img/logo.png"
-                        alt="Markbot Logo"
+                        alt={`${config.botName}bot Logo`}
                         fill
                         priority
                         className="object-contain"

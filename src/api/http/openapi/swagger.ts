@@ -1,6 +1,7 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import path from 'path';
 import fs from 'fs';
+import { config } from '@/app/config';
 
 const pkgPath = path.join(__dirname, '../../../../package.json');
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
@@ -9,14 +10,14 @@ const options: swaggerJSDoc.Options = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: 'Markbot API',
+      title: `${config.botName} API`,
       version: pkg.version,
-      description: 'API documentation for Markbot backend service',
+      description: `API documentation for ${config.botName} backend service`,
     },
     servers: [
       {
         url: '/api',
-        description: 'Markbot API',
+        description: `${config.botName} API`,
       },
     ],
     tags: [
@@ -33,7 +34,7 @@ const options: swaggerJSDoc.Options = {
 export const swaggerSpec = swaggerJSDoc(options);
 
 export const swaggerDocumentationOptions = {
-  customSiteTitle: 'Markbot API Docs',
+  customSiteTitle: `${config.botName} API Docs`,
   customCss: `
         /* Base (Light Theme) - Default */
         body, .swagger-ui { background-color: #ffffff !important; color: #171717 !important; }

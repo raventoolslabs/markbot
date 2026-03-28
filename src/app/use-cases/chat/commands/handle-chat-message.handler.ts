@@ -122,7 +122,7 @@ export class HandleChatMessageHandler {
     private getInfoResponse(platform?: string): ChatMessageResponseDto {
         return {
             text: `ℹ️ *Información del Bot:*
-• Nombre: MarkBot
+• Nombre: ${config.botName}
 • Versión: 1.0.0
 • Plataforma: ${platform || 'Desconocida'}
 • Estado: Activo ✅`,
@@ -132,7 +132,7 @@ export class HandleChatMessageHandler {
     private async generateResponse(query: string, context: string[]): Promise<string> {
         try {
             const systemPrompt = `
-                Eres MarkBot, un asistente inteligente y útil.
+                Eres ${config.botName}, un asistente inteligente y útil.
                 Utiliza el siguiente contexto recuperado para responder a la pregunta del usuario.
                 Si la información no está en el contexto, dí que no lo sabes basándote en los documentos, pero intenta ser de ayuda.
                 

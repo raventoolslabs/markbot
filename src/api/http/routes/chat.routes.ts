@@ -7,7 +7,7 @@ const router = Router();
  * @openapi
  * /chat/message:
  *   post:
- *     summary: Send a message to Markbot
+ *     summary: Send a message to the bot
  *     tags: [Chat]
  *     requestBody:
  *       required: true

@@ -38,6 +38,7 @@ export const config = {
     port: parseInt(process.env.SMTP_PORT || '587', 10),
     user: process.env.SMTP_USER || 'user',
     password: process.env.SMTP_PASSWORD || 'password',
-    from: process.env.SMTP_FROM || '"MarkBot" <noreply@markbot.com>',
+    from: process.env.SMTP_FROM || `"${process.env.BOT_NAME || 'Mark'}Bot" <noreply@markbot.com>`,
   },
+  botName: process.env.BOT_NAME || 'Mark',
 };

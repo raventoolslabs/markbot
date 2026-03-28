@@ -1,13 +1,15 @@
+import { config } from '@/config';
+
 export const en = {
     home: {
-        welcome: 'Welcome to Markbot',
+        welcome: `Welcome to ${config.botName}bot`,
         description: 'The backend API is running at',
-        subDescription: 'Markbot is your intelligent assistant for Markdown projects. Connect with Google Chat or start a conversation right here.',
+        subDescription: `${config.botName}bot is your intelligent assistant for Markdown projects. Connect with Google Chat or start a conversation right here.`,
     },
     chat: {
         placeholder: 'Type a message...',
         send: 'Send',
-        start: 'Start a conversation with Mark...',
+        start: `Start a conversation with ${config.botName}...`,
         error: 'Error connecting to server.',
     },
     auth: {

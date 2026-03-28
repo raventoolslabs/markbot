@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { CheckCircleSolidIcon } from '@/components/Icons';
+import { config } from '@/config';
 
 export default function EmbeddedChatPage() {
     const { user } = useAuth();
@@ -96,9 +97,9 @@ export default function EmbeddedChatPage() {
                 <div className="max-w-3xl mx-auto space-y-8">
 
                     <div className="text-center space-y-4">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Embed Markbot</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Embed {config.botName}bot</h1>
                         <p className="text-lg text-gray-600 dark:text-gray-300">
-                            Generate a secure code snippet to add Markbot to any website.
+                            Generate a secure code snippet to add {config.botName}bot to any website.
                         </p>
                     </div>
 

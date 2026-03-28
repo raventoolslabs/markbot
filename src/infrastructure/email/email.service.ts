@@ -22,11 +22,11 @@ export class EmailService {
             const info = await this.transporter.sendMail({
                 from: config.email.from,
                 to,
-                subject: 'MarkBot - Verify your email',
+                subject: `${config.botName} - Verify your email`,
                 text: `Your verification code is: ${code}`,
                 html: `
                     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                        <h2>Welcome to MarkBot!</h2>
+                        <h2>Welcome to ${config.botName}!</h2>
                         <p>Please use the following code to verify your email address:</p>
                         <h1 style="color: #059669; font-size: 32px; letter-spacing: 5px;">${code}</h1>
                         <p>This code will expire in 15 minutes.</p>
