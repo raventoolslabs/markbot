@@ -9,6 +9,7 @@ coverage
 # Production
 dist
 build
+data
 
 # Misc
 .DS_Store
@@ -35,3 +36,7 @@ out
 
 # TypeScript
 *.tsbuildinfo
+
+/src/generated/prisma
+
+deploy

@@ -1,0 +1,10 @@
+node_modules
+dist
+web
+web/app
+web/components
+web/context
+web/utils
+web/public
+coverage
+package-lock.json
