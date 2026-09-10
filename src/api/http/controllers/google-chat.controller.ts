@@ -7,9 +7,9 @@ import { ProcessGoogleChatMessageHandler } from '@/app/use-cases/google-chat/com
 
 import { HandleChatMessageHandler } from '@/app/use-cases/chat/commands/handle-chat-message.handler';
 import { SearchDocumentsHandler } from '@/app/use-cases/document/queries/search-documents.handler';
-import { documentChunkRepository } from '@/infrastructure/db/repositories/document-chunk.repository';
+import { pergamoDocumentRepository } from '@/infrastructure/pergamo/pergamo-document.repository';
 
-const searchDocumentsHandler = new SearchDocumentsHandler(documentChunkRepository);
+const searchDocumentsHandler = new SearchDocumentsHandler(pergamoDocumentRepository);
 const handleChatMessageHandler = new HandleChatMessageHandler(searchDocumentsHandler);
 
 const getGoogleChatAuthUrlHandler = new GetGoogleChatAuthUrlHandler();

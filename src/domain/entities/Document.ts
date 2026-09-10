@@ -1,9 +1,7 @@
 export interface Document {
     id: string;
+    name: string;
+    originalName: string;
     creationDate: Date;
-    modificationDate: Date;
-    organization: string;
-    path: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata: any;
+    metadata: Record<string, unknown>;
 }

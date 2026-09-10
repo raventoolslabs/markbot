@@ -98,7 +98,7 @@ export const en = {
     },
     upload: {
         title: 'Upload Document',
-        selectLabel: 'Select Markdown or ZIP file',
+        selectLabel: 'Select a document (PDF, ODT…)',
         cancel: 'Cancel',
         upload: 'Upload',
         uploading: 'Uploading...',

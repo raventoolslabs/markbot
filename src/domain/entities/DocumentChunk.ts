@@ -1,9 +1,8 @@
 export interface DocumentChunk {
-    id: string | number;
-    documentId: string;
+    id: number;
     content: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    embedding: any;
+    page?: number;
+    section?: string;
+    headingPath: string[];
+    length: number;
 }

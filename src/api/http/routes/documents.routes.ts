@@ -3,15 +3,32 @@ import multer from 'multer';
 
 import { logger } from '@/infrastructure/logging/logger';
 import { documentController } from '@/api/http/controllers/document.controller';
+import { authenticationMiddleware } from '@/api/http/middlewares/authentication.middleware';
+import { ExternalServiceException } from '@/domain/exceptions/ExternalServiceException';
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
+// 50 MB: el tope de subida de Pergamo.
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
+
+router.use(authenticationMiddleware);
+
+// Los rechazos de Pergamo (tipo no admitido, no encontrado…) llegan tal cual; lo demás es que Pergamo falla.
+const sendError = (res: Response, error: unknown, context: string) => {
+  logger.error(context, 'DocumentRoutes', error);
+
+  if (error instanceof ExternalServiceException) {
+    const isClientError = error.status >= 400 && error.status < 500;
+    return res.status(isClientError ? error.status : 502).json({ error: error.message });
+  }
+
+  res.status(500).json({ error: 'Internal server error' });
+};
 
 /**
  * @openapi
  * /document:
  *   post:
- *     summary: Upload a PDF or Markdown file to vectorize
+ *     summary: Upload a document to Pergamo (PDF, ODT…) to be indexed
  *     tags: [Document]
  *     requestBody:
  *       required: true
@@ -25,20 +42,17 @@ const upload = multer({ storage: multer.memoryStorage() });
  *                 format: binary
  *     responses:
  *       200:
- *         description: File processed successfully
+ *         description: Document stored in Pergamo
  */
 router.post('/', upload.single('file'), async (req: Request, res: Response) => {
   if (!req.file) {
-    return res.status(400).send('No file uploaded');
+    return res.status(400).json({ error: 'No file uploaded' });
   }
 
   try {
-    const result = await documentController.processFile(req.file.buffer, req.file.originalname, req.file.mimetype);
-    res.json({ message: 'File processed successfully', ...result });
+    res.json(await documentController.uploadDocument(req.file.buffer, req.file.originalname, req.file.mimetype));
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Error processing file upload', 'DocumentRoutes', error);
-    res.status(500).json({ error: errorMessage });
+    sendError(res, error, 'Error uploading document');
   }
 });
 
@@ -46,7 +60,7 @@ router.post('/', upload.single('file'), async (req: Request, res: Response) => {
  * @openapi
  * /document/list:
  *   get:
- *     summary: List all uploaded documents
+ *     summary: List the documents stored in Pergamo
  *     tags: [Document]
  *     responses:
  *       200:
@@ -54,12 +68,9 @@ router.post('/', upload.single('file'), async (req: Request, res: Response) => {
  */
 router.get('/list', async (req: Request, res: Response) => {
   try {
-    const documents = await documentController.listDocuments();
-    res.json(documents);
+    res.json(await documentController.listDocuments());
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Error listing documents', 'DocumentRoutes', error);
-    res.status(500).json({ error: errorMessage });
+    sendError(res, error, 'Error listing documents');
   }
 });
 
@@ -91,9 +102,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     res.json(document);
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error('Error getting document', 'DocumentRoutes', error);
-    res.status(500).json({ error: errorMessage });
+    sendError(res, error, 'Error getting document');
   }
 });
 
@@ -101,7 +110,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * @openapi
  * /document/{id}:
  *   delete:
- *     summary: Delete a document and its chunks
+ *     summary: Delete a document from Pergamo
  *     tags: [Document]
  *     parameters:
  *       - in: path
@@ -112,17 +121,13 @@ router.get('/:id', async (req: Request, res: Response) => {
  *     responses:
  *       200:
  *         description: Document deleted
- *       500:
- *         description: Server error
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     await documentController.deleteDocument(req.params.id);
     res.json({ success: true, message: 'Document deleted successfully' });
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    logger.error(`Error deleting document: ${errorMessage}`, 'DocumentRoutes');
-    res.status(500).json({ error: 'Failed to delete document' });
+    sendError(res, error, 'Error deleting document');
   }
 });
 

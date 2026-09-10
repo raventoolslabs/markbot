@@ -18,13 +18,14 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   // Database
   databaseUrl: process.env.DATABASE_URL,
-  // Vectorization
   vector: {
     queryLimit: parseInt(process.env.VECTOR_QUERY_LIMIT || '6', 10),
-    maxChunkSize: parseInt(process.env.VECTOR_MAX_CHUNK_SIZE || '1000', 10),
-    chunkOverlap: parseInt(process.env.VECTOR_CHUNK_OVERLAP || '100', 10),
-    modelName: process.env.VECTOR_MODEL_NAME || 'Xenova/all-MiniLM-L6-v2',
-    batchSize: parseInt(process.env.VECTOR_BATCH_SIZE || '10', 10),
+  },
+  // Documentos e índice semántico: viven en Pergamo.
+  pergamo: {
+    url: process.env.PERGAMO_URL || 'http://localhost:3000',
+    organization: process.env.PERGAMO_ORGANIZATION || 'markbot',
+    password: process.env.PERGAMO_PASSWORD || '',
   },
   chat: {
     provider: process.env.CHAT_PROVIDER || 'openai', // 'openai' | 'ollama'

@@ -1,26 +1,28 @@
 import { SearchDocumentsQuery } from './search-documents.query';
-import { DocumentChunkRepository } from '@/app/ports/repositories/document-chunk.repository';
-import { vectorUtil } from '@/infrastructure/utils/vector.util';
-import { SearchResult } from '@/domain/entities/SearchResult';
-import { logger } from '@/infrastructure/logging/logger';
+import { DocumentRepository } from '@/app/ports/repositories/document.repository';
+
+export interface SearchDocumentsResult {
+    content: string;
+    documentName: string;
+    section: string;
+}
 
 export class SearchDocumentsHandler {
-    constructor(private documentChunkRepository: DocumentChunkRepository) { }
+    constructor(private documentRepository: DocumentRepository) { }
 
-    async execute(query: SearchDocumentsQuery): Promise<SearchResult[]> {
-        const queryEmbedding = await vectorUtil.embedText(query.query);
-        const vectorString = `[${queryEmbedding.join(',')}]`;
+    async execute(query: SearchDocumentsQuery): Promise<SearchDocumentsResult[]> {
+        const results = await this.documentRepository.search(query.query, query.limit || 5);
 
-        const limit = query.limit || 5;
-        const results = await this.documentChunkRepository.search(vectorString, limit);
+        // /search no trae el nombre del documento.
+        // ponytail: una petición por documento; caché de nombres si la latencia duele
+        const ids = Array.from(new Set(results.map((result) => result.documentId)));
+        const documents = await Promise.all(ids.map((id) => this.documentRepository.getById(id)));
+        const names = new Map(ids.map((id, index) => [id, documents[index]?.name ?? 'Documento']));
 
-        if (results.length > 0) {
-            const chunkIds = results.map((row) => row.id).join(', ');
-            logger.info(`[DEBUG] Search found ${results.length} chunks. IDs: ${chunkIds}`, 'SearchDocumentsHandler');
-        } else {
-            logger.info('[DEBUG] Search found 0 chunks.', 'SearchDocumentsHandler');
-        }
-
-        return results;
+        return results.map((result) => ({
+            content: result.content,
+            documentName: names.get(result.documentId) ?? 'Documento',
+            section: result.section ?? result.headingPath[result.headingPath.length - 1] ?? 'General',
+        }));
     }
 }
