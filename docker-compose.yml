@@ -1,5 +1,6 @@
-# Redes: 'raventoolslabs' une markbot con Pergamo; 'db' da acceso al postgres
-# compartido, y solo la necesita el backend.
+# Redes: 'raventoolslabs' une markbot con Pergamo; 'db' y 'redis' dan acceso al
+# postgres y al Redis compartidos (solo el backend); 'proxy' es por donde entra
+# el nginx del host.
 services:
   backend:
     build:
@@ -13,6 +14,8 @@ services:
     environment:
       - PORT=3002
       - NODE_ENV=production
+      # Redis compartido: la cola usa bull:token-refresh, el mismo que markbot en
+      # desarrollo, así que no deben correr los dos a la vez contra él.
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB}?schema=markbot
@@ -32,12 +35,10 @@ services:
       - SMTP_PORT
       - SMTP_USER
       - SMTP_PASSWORD
-    depends_on:
-      redis:
-        condition: service_healthy
     networks:
       - raventoolslabs
       - db
+      - redis
     restart: unless-stopped
 
   web:
@@ -58,27 +59,12 @@ services:
       - proxy
     restart: unless-stopped
 
-  # Propio y sin publicar: los tokens de Google no se mezclan con steamfront-redis.
-  redis:
-    image: redis:7-alpine
-    container_name: markbot-redis
-    expose:
-      - "6379"
-    volumes:
-      - ./data/redis:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - raventoolslabs
-    restart: unless-stopped
-
 networks:
   raventoolslabs:
     external: true
   db:
+    external: true
+  redis:
     external: true
   proxy:
     external: true
