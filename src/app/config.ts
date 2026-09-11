@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 6240,
   spaceId: process.env.SPACE_ID,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
   googleClientScope: process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
   googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
-  appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
+  appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 6240}`,
   googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
   jwtSecret: process.env.JWT_SECRET,
   encryptionKey: process.env.ENCRYPTION_KEY,
@@ -23,7 +23,7 @@ export const config = {
   },
   // Documentos e índice semántico: viven en Pergamo.
   pergamo: {
-    url: process.env.PERGAMO_URL || 'http://localhost:3000',
+    url: process.env.PERGAMO_URL || 'http://localhost:6230',
     organization: process.env.PERGAMO_ORGANIZATION || 'markbot',
     password: process.env.PERGAMO_PASSWORD || '',
   },

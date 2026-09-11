@@ -16,11 +16,13 @@ FROM node:24-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+# El server.js del modo standalone escucha en PORT.
+ENV PORT=6241
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-EXPOSE 3000
+EXPOSE 6241
 
 CMD ["node", "server.js"]

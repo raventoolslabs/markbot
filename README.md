@@ -25,7 +25,7 @@ Este proyecto consiste en un backend desarrollado en Node.js/Express y un fronte
    cp .env.example .env
    ```
    Variables clave:
-   - `PORT`: Puerto del backend (por defecto 3000 o 3001 según script).
+   - `PORT`: Puerto del backend (6240).
    - `APP_HOST`: URL base para callbacks (ej. `https://tu-tunnel.loca.lt`).
    - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Credenciales OAuth2.
    - `SPACE_ID`: ID del espacio de Google Chat.
@@ -38,9 +38,9 @@ Para arrancar el entorno de desarrollo completo (Backend, Frontend y Tunnel):
 npm run dev
 ```
 Esto iniciará:
-- Backend en puerto 3001 (reinicio automático con nodemon).
-- Frontend en puerto 3000.
-- Túnel local exponiendo el puerto 3000 a internet.
+- Backend en puerto 6240 (reinicio automático con nodemon).
+- Frontend en puerto 6241, publicado en `https://markbot.raventools.labs` por el proxy.
+- Túnel local exponiendo el puerto 6240 a internet.
 
 ### Producción
 Para compilar y arrancar en modo producción:
@@ -49,7 +49,7 @@ npm run build
 npm start
 ```
 - `npm run build`: Compila el TypeScript del backend y construye la aplicación Next.js.
-- `npm start`: Ejecuta el backend (puerto 3001) y el frontend (puerto 3000) concurrentemente.
+- `npm start`: Ejecuta el backend (puerto 6240) y el frontend (puerto 6241) concurrentemente.
 
 ### Tests
 Para ejecutar los tests unitarios y de integración:
