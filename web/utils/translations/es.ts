@@ -16,6 +16,9 @@ export const es = {
         login: {
             title: 'Iniciar Sesión',
             submit: 'Entrar',
+            subtitle: 'Accede a tu cuenta para continuar.',
+            tagline: 'Tu conocimiento, siempre a un mensaje de distancia.',
+            taglineDescription: 'Markbot centraliza tu conocimiento y responde con contexto real de tu organización, sin salir del chat.',
             noAccount: "¿No tienes una cuenta?",
             signUpLink: 'Regístrate',
         },
@@ -55,6 +58,8 @@ export const es = {
             passwordPlaceholder: '••••••••',
             loading: 'Cargando...',
             orContinue: 'O continúa con',
+            showPassword: 'VER',
+            hidePassword: 'OCULTAR',
             error: 'Autenticación fallida',
         }
     },

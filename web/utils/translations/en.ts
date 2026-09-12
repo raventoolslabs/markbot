@@ -16,6 +16,9 @@ export const en = {
         login: {
             title: 'Login',
             submit: 'Sign In',
+            subtitle: 'Sign in to your account to continue.',
+            tagline: 'Your knowledge, always one message away.',
+            taglineDescription: 'Markbot centralises your knowledge and answers with real context from your organisation, without leaving the chat.',
             noAccount: "Don't have an account?",
             signUpLink: 'Sign up',
         },
@@ -55,6 +58,8 @@ export const en = {
             passwordPlaceholder: '••••••••',
             loading: 'Loading...',
             orContinue: 'Or continue with',
+            showPassword: 'SHOW',
+            hidePassword: 'HIDE',
             error: 'Authentication failed',
         }
     },

@@ -16,7 +16,6 @@ interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: () => void;
     logout: () => void;
     processLogin: (credential: string) => Promise<any>;
     loginWithEmail: (email: string, password: string) => Promise<any>;
@@ -26,6 +25,7 @@ interface AuthContextType {
     resendVerificationEmail: (email: string) => Promise<void>;
     isLoading: boolean;
     updateUser: (user: User) => void;
+    authFetch: (input: string, init?: RequestInit) => Promise<Response>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -201,13 +201,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    // Centraliza la cabecera Bearer y cierra la sesión si el backend la rechaza.
+    const authFetch = async (input: string, init: RequestInit = {}) => {
+        const currentToken = Cookies.get('token');
+        const res = await fetch(input, {
+            ...init,
+            headers: {
+                ...(init.headers || {}),
+                ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
+            },
+        });
+
+        if (res.status === 401) {
+            logout();
+            window.location.href = '/login';
+        }
+
+        return res;
+    };
+
     const updateUser = (userData: User) => {
         setUser(userData);
         Cookies.set('user', JSON.stringify(userData), { expires: 7 });
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, login: () => { }, logout, processLogin, loginWithEmail, registerWithEmail, verify2fa, verifyEmail, resendVerificationEmail, isLoading, updateUser }}>
+        <AuthContext.Provider value={{ user, token, logout, processLogin, loginWithEmail, registerWithEmail, verify2fa, verifyEmail, resendVerificationEmail, isLoading, updateUser, authFetch }}>
             {children}
         </AuthContext.Provider>
     );

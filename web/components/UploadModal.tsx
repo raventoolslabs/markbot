@@ -2,8 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { CloseIcon, SpinnerIcon } from './Icons';
-import Cookies from 'js-cookie';
 
 interface UploadModalProps {
     isOpen: boolean;
@@ -13,6 +13,7 @@ interface UploadModalProps {
 
 export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalProps) => {
     const { t } = useLanguage();
+    const { authFetch } = useAuth();
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -40,9 +41,8 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
         formData.append('file', file);
 
         try {
-            const response = await fetch('/api/document', {
+            const response = await authFetch('/api/document', {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${Cookies.get('token')}` },
                 body: formData,
             });
 
@@ -65,19 +65,19 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all">
+            <div className="bg-surface rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t.upload.title}</h2>
+                    <h2 className="text-xl font-bold text-ink">{t.upload.title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        className="text-ink-mute hover:text-ink"
                     >
                         <CloseIcon className="h-6 w-6" />
                     </button>
                 </div>
 
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-ink-soft mb-2">
                         {t.upload.selectLabel}
                     </label>
                     <input
@@ -88,11 +88,11 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
               file:mr-4 file:py-2 file:px-4
               file:rounded-md file:border-0
               file:text-sm file:font-semibold
-              file:bg-emerald-600 file:text-white
-              hover:file:bg-emerald-700
+              file:bg-brand file:text-brand-ink
+              hover:file:bg-brand-deep
               file:transition-colors file:duration-200
               file:cursor-pointer
-              dark:file:bg-emerald-600 dark:file:hover:bg-emerald-700
+              
             "
                     />
                 </div>
@@ -106,7 +106,7 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                 <div className="flex justify-end gap-3 mt-6">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        className="px-4 py-2 text-ink-soft bg-surface-2 rounded-xl hover:bg-line transition-colors"
                         disabled={isUploading}
                     >
                         {t.upload.cancel}
@@ -114,15 +114,15 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                     <button
                         onClick={handleUpload}
                         disabled={!file || isUploading}
-                        className={`px-4 py-2 text-white rounded-md transition-colors flex items-center gap-2
+                        className={`px-4 py-2 text-brand-ink rounded-xl transition-colors flex items-center gap-2
               ${!file || isUploading
-                                ? 'bg-emerald-400 cursor-not-allowed'
-                                : 'bg-emerald-600 hover:bg-emerald-700 shadow-md'
+                                ? 'bg-brand/50 cursor-not-allowed'
+                                : 'bg-brand hover:bg-brand-deep shadow-md'
                             }
             `}
                     >
                         {isUploading && (
-                            <SpinnerIcon className="animate-spin h-4 w-4 text-white" />
+                            <SpinnerIcon className="animate-spin h-4 w-4 text-brand-ink" />
                         )}
                         {isUploading ? t.upload.uploading : t.upload.upload}
                     </button>
