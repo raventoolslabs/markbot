@@ -40,6 +40,6 @@ COPY --from=builder /usr/src/app/dist ./dist
 # Copy infrastructure scripts if needed
 # The build script does: cp -r src/infrastructure/db/scripts/sql dist/infrastructure/db/scripts/
 
-EXPOSE 3002
+EXPOSE 6240
 
 CMD ["node", "dist/app/index.js"]

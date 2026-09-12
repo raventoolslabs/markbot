@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { googleRouter } from './google.routes';
 import { chatRouter } from './chat.routes';
 import { documentRouter } from './documents.routes';
 import { authRouter } from './auth.routes';
@@ -60,7 +59,6 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-router.use('/google', googleRouter);
 router.use('/chat', chatRouter);
 router.use('/document', documentRouter);
 router.use('/auth', authRouter);

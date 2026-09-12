@@ -9,6 +9,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { ArrowLeftIcon, BuildingIcon, CalendarIcon } from '@/components/Icons';
+import Cookies from 'js-cookie';
 
 interface DocumentChunk {
     id: string;
@@ -40,7 +41,9 @@ export default function DocumentDetailPage() {
 
     const fetchDocument = async (id: string) => {
         try {
-            const response = await fetch(`/api/document/${id}`);
+            const response = await fetch(`/api/document/${id}`, {
+                headers: { Authorization: `Bearer ${Cookies.get('token')}` },
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch document details');
             }

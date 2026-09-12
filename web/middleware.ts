@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
     // Only rewrite /api requests that are NOT handled by Next.js API routes (if any)
     // Since all our API logic is in the backend service, we rewrite all /api calls.
     if (pathname.startsWith('/api')) {
-        const apiUrl = process.env.API_URL || 'http://localhost:3002';
+        const apiUrl = process.env.API_URL || 'http://localhost:6240';
 
         // Construct the new URL
         const url = request.nextUrl.clone();

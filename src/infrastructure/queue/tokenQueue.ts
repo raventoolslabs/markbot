@@ -3,6 +3,10 @@ import Redis from 'ioredis';
 import { config } from '@/app/config';
 import { logger } from '@/infrastructure/logging/logger';
 
+// Sin consumidor desde que se retiró Google Chat: nadie importa este módulo, así
+// que el worker no arranca ni se abre conexión a Redis. Se mantiene por si vuelve
+// a hacer falta una cola.
+
 type RefreshHandler = () => Promise<number>; // Returns next expiry timestamp (ms)
 
 export class TokenQueueManager {

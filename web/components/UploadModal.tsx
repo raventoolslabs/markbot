@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { CloseIcon, SpinnerIcon } from './Icons';
+import Cookies from 'js-cookie';
 
 interface UploadModalProps {
     isOpen: boolean;
@@ -41,6 +42,7 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
         try {
             const response = await fetch('/api/document', {
                 method: 'POST',
+                headers: { Authorization: `Bearer ${Cookies.get('token')}` },
                 body: formData,
             });
 
@@ -80,7 +82,6 @@ export const UploadModal = ({ isOpen, onClose, onUploadSuccess }: UploadModalPro
                     </label>
                     <input
                         type="file"
-                        accept=".md,.zip,application/zip,application/x-zip-compressed"
                         onChange={handleFileChange}
                         ref={fileInputRef}
                         className="block w-full text-sm text-gray-500

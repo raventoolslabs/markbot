@@ -3,14 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: process.env.PORT || 3000,
-  spaceId: process.env.SPACE_ID,
+  port: process.env.PORT || 6240,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  googleClientScope: process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
-  googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
-  appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 3000}`,
-  googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
   jwtSecret: process.env.JWT_SECRET,
   encryptionKey: process.env.ENCRYPTION_KEY,
   redisHost: process.env.REDIS_HOST || 'localhost',
@@ -18,13 +12,14 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   // Database
   databaseUrl: process.env.DATABASE_URL,
-  // Vectorization
   vector: {
     queryLimit: parseInt(process.env.VECTOR_QUERY_LIMIT || '6', 10),
-    maxChunkSize: parseInt(process.env.VECTOR_MAX_CHUNK_SIZE || '1000', 10),
-    chunkOverlap: parseInt(process.env.VECTOR_CHUNK_OVERLAP || '100', 10),
-    modelName: process.env.VECTOR_MODEL_NAME || 'Xenova/all-MiniLM-L6-v2',
-    batchSize: parseInt(process.env.VECTOR_BATCH_SIZE || '10', 10),
+  },
+  // Documentos e índice semántico: viven en Pergamo.
+  pergamo: {
+    url: process.env.PERGAMO_URL || 'http://localhost:6230',
+    organization: process.env.PERGAMO_ORGANIZATION || 'markbot',
+    password: process.env.PERGAMO_PASSWORD || '',
   },
   chat: {
     provider: process.env.CHAT_PROVIDER || 'openai', // 'openai' | 'ollama'

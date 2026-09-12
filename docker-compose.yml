@@ -1,3 +1,6 @@
+# Redes: 'raventoolslabs' une markbot con Pergamo; 'db' y 'redis' dan acceso al
+# postgres y al Redis compartidos (solo el backend); 'proxy' es por donde entra
+# el nginx del host.
 services:
   backend:
     build:
@@ -5,34 +8,37 @@ services:
       dockerfile: Dockerfile
     container_name: markbot-backend
     ports:
-      - "3002:3002"
+      - "6240:6240"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - PORT=3002
+      - PORT=6240
       - NODE_ENV=production
-      - REDIS_HOST=host.docker.internal
+      # Redis compartido: la cola token-refresh se quedó sin consumidor al
+      # retirar Google Chat, así que hoy no se abre ninguna conexión. Se mantiene
+      # por si vuelve a hacer falta una cola.
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?schema=markbot
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB}?schema=markbot
       - CHAT_PROVIDER
       - CHAT_API_KEY
       - CHAT_MODEL_NAME
       - CHAT_TEMPERATURE
       - OLLAMA_BASE_URL
+      # El contenedor de Pergamo solo expone la entrada (6231), que sirve la API en
+      # la raíz; el 6230 es la API de su `npm run dev`.
+      - PERGAMO_URL=http://pergamo:6231
+      - PERGAMO_ORGANIZATION
+      - PERGAMO_PASSWORD
       - GOOGLE_CLIENT_ID
-      - GOOGLE_CLIENT_SECRET
-      - GOOGLE_CLIENT_SCOPE
       - SMTP_HOST
       - SMTP_PORT
       - SMTP_USER
       - SMTP_PASSWORD
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
-    #   db:
-    #     condition: service_healthy
     networks:
-      - markbot-network
+      - raventoolslabs
+      - db
+      - redis
     restart: unless-stopped
 
   web:
@@ -41,53 +47,24 @@ services:
       dockerfile: Dockerfile
     container_name: markbot-web
     ports:
-      - "3000:3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "6241:6241"
     environment:
-      - API_URL=http://backend:3002
+      - PORT=6241
+      - API_URL=http://backend:6240
     depends_on:
       - backend
+    # 'proxy': el nginx del host la publica por su nombre.
     networks:
-      - markbot-network
+      - raventoolslabs
+      - proxy
     restart: unless-stopped
 
-  # redis:
-  #   image: redis:alpine
-  #   container_name: markbot-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - ./data/redis:/data
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 5
-  #   networks:
-  #     - markbot-network
-  #   restart: unless-stopped
-
-  # db:
-  #   image: pgvector/pgvector:pg16
-  #   container_name: markbot-db
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     - POSTGRES_USER
-  #     - POSTGRES_PASSWORD
-  #     - POSTGRES_DB
-  #   volumes:
-  #     - ./data/db:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - markbot-network
-  #   restart: unless-stopped
-
 networks:
-  markbot-network:
+  raventoolslabs:
+    external: true
+  db:
+    external: true
+  redis:
+    external: true
+  proxy:
     external: true

@@ -11,6 +11,7 @@ import { DeleteConfirmationModal } from '@/components/DeleteConfirmationModal';
 import { UploadIcon, DocumentIcon, EyeIcon, TrashIcon } from '@/components/Icons';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import Cookies from 'js-cookie';
 
 interface Document {
     id: string;
@@ -49,7 +50,9 @@ export default function DocumentsPage() {
     const fetchDocuments = async () => {
         setLoading(true);
         try {
-            const response = await fetch('/api/document/list');
+            const response = await fetch('/api/document/list', {
+                headers: { Authorization: `Bearer ${Cookies.get('token')}` },
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch documents');
             }
@@ -78,6 +81,7 @@ export default function DocumentsPage() {
         try {
             const response = await fetch(`/api/document/${documentToDelete.id}`, {
                 method: 'DELETE',
+                headers: { Authorization: `Bearer ${Cookies.get('token')}` },
             });
 
             if (!response.ok) {

@@ -6,8 +6,6 @@ import { config } from '@/app/config';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { DocumentAssetDto } from '@/api/http/types/DocumentAssetDto';
-import { SearchResultDto } from '@/api/http/types/SearchResultDto';
 
 export class HandleChatMessageHandler {
     constructor(private searchDocumentsHandler: SearchDocumentsHandler) { }
@@ -37,53 +35,27 @@ export class HandleChatMessageHandler {
             logger.info(`Searching context for: "${text}"`, 'MessageHandler');
             const searchResults = await this.searchDocumentsHandler.execute({ query: text, limit: config.vector.queryLimit });
 
-            const contextData = searchResults.map((res: any) => ({
-                content: res.content,
-                assets: res.assets || [],
-                sourcePath: res.sourcePath || 'Desconocido',
-                metadata: res.metadata || {},
-            }));
-
-            const contextStrings = contextData.map((d) => {
-                const docName = d.sourcePath.split('/').pop() || 'Documento';
-                const section = d.metadata.section || 'General';
-                return `[Fuente: ${docName} | Sección: ${section}]\n${d.content}`;
-            });
-            const allImages = contextData.flatMap((d) => d.assets.filter((a: any) => a.asset_type === 'image'));
+            const contextStrings = searchResults.map(
+                (result) => `[Fuente: ${result.documentName} | Sección: ${result.section}]\n${result.content}`,
+            );
 
             if (contextStrings.length > 0) {
-                logger.info(
-                    `Found ${contextStrings.length} relevant chunks with ${allImages.length} images.`,
-                    'MessageHandler',
-                );
+                logger.info(`Found ${contextStrings.length} relevant chunks.`, 'MessageHandler');
 
                 const aiResponse = await this.generateResponse(text, contextStrings);
 
-                const sourcesList = Array.from(new Set(contextData.map((d: any) => {
-                    const docName = d.sourcePath ? d.sourcePath.split('/').pop() : 'Documento';
-                    const section = d.metadata?.section || 'General';
-                    return JSON.stringify({ document: docName, section });
-                }))).map(str => JSON.parse(str as string));
+                const sourcesList = Array.from(new Set(searchResults.map(
+                    (result) => JSON.stringify({ document: result.documentName, section: result.section }),
+                ))).map((source) => JSON.parse(source));
 
-                const response: ChatMessageResponseDto = {
+                return {
                     text: aiResponse,
                     metadata: {
                         source: 'vector-search',
                         resultsCount: contextStrings.length,
-                        imagesCount: allImages.length,
                         sources: sourcesList,
                     },
                 };
-
-                if (allImages.length > 0) {
-                    response.images = allImages.map((img: DocumentAssetDto) => ({
-                        name: img.asset_name,
-                        mimeType: img.mime_type || 'application/octet-stream',
-                        data: img.content,
-                    }));
-                }
-
-                return response;
             }
 
             const greeting = userName ? `Hola ${userName}` : 'Hola';
@@ -96,6 +68,7 @@ export class HandleChatMessageHandler {
                 },
             };
         } catch (error) {
+            // Si Pergamo no responde se dice, en vez de contestar como si el fondo estuviera vacío.
             logger.error('Error in message handler flow', 'MessageHandler', error);
             return {
                 text: 'Lo siento, tuve un problema al consultar mi base de datos de conocimientos.',
@@ -135,17 +108,12 @@ export class HandleChatMessageHandler {
                 Eres ${config.botName}, un asistente inteligente y útil.
                 Utiliza el siguiente contexto recuperado para responder a la pregunta del usuario.
                 Si la información no está en el contexto, dí que no lo sabes basándote en los documentos, pero intenta ser de ayuda.
-                
-                IMPORTANTE: 
+
+                IMPORTANTE:
                 - Formatea tu respuesta usando Markdown para mejor legibilidad.
                 - Usa **negrita** para términos importantes y listas para enumeraciones.
-                - El contexto puede contener referencias a imágenes en el formato \`![texto alternativo][nombre_imagen]\` o \`![][nombre_imagen]\`.
-                - CUANDO uses información de un fragmento que tiene una imagen, DEBES incluir la imagen visualmente en tu respuesta.
-                - Para incluir la imagen, usa EXACTAMENTE este formato Markdown: \`![nombre_imagen](nombre_imagen)\`.
-                - Inserta la imagen JUSTO DESPUÉS del párrafo relevante, para no perder el contexto.
-                - NO inventes nombres de imágenes, usa solo las que aparecen en el contexto como \`[nombre_imagen]\`.
                 - Céntrate únicamente en responder la pregunta sin añadir ningún texto sobre qué fuentes consultaste.
-                
+
                 Contexto:
                 ${context.join('\n---\n')}
             `;

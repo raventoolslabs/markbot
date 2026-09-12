@@ -4,7 +4,7 @@ export const es = {
     home: {
         welcome: `Bienvenido a ${config.botName}bot`,
         description: 'El backend de la API está corriendo en',
-        subDescription: `${config.botName}bot es tu asistente inteligente para proyectos Markdown. Conecta con Google Chat o inicia una conversación aquí mismo.`,
+        subDescription: `${config.botName}bot es tu asistente inteligente para proyectos Markdown. Inicia una conversación aquí mismo.`,
     },
     chat: {
         placeholder: 'Escribe un mensaje...',
@@ -98,7 +98,7 @@ export const es = {
     },
     upload: {
         title: 'Subir Documento',
-        selectLabel: 'Selecciona archivo Markdown o ZIP',
+        selectLabel: 'Selecciona un documento (PDF, ODT…)',
         cancel: 'Cancelar',
         upload: 'Subir',
         uploading: 'Subiendo...',

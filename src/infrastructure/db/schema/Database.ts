@@ -1,6 +1,3 @@
-import { DocumentRow } from './DocumentRow';
-import { DocumentChunkRow } from './DocumentChunkRow';
-import { DocumentChunkAssetRow } from './DocumentChunkAssetRow';
 import { UserAssetRow } from './UserAssetRow';
 import { UserRow } from './UserRow';
 import { ApiKeyRow } from './ApiKeyRow';
@@ -9,9 +6,6 @@ import { User2faRecoveryCodeRow } from './User2faRecoveryCodeRow';
 import { UserVerificationCodeRow } from './UserVerificationCodeRow';
 
 export interface Database {
-  document: DocumentRow;
-  documentchunk: DocumentChunkRow;
-  documentchunkasset: DocumentChunkAssetRow;
   userasset: UserAssetRow;
   user: UserRow;
   api_key: ApiKeyRow;

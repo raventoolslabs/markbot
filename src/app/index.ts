@@ -6,7 +6,6 @@ import { config } from './config';
 import { baseRouter } from '@/api/http/routes';
 import { swaggerSpec, swaggerDocumentationOptions } from '@/api/http/openapi/swagger';
 import { errorHandler } from '@/api/http/middlewares/error-handler.middleware';
-import { googleChatService } from '@/app/services/googleChat.service';
 import { managerDb } from '@/infrastructure/db/client';
 
 import { logger } from '@/infrastructure/logging/logger';
@@ -80,16 +79,6 @@ if (require.main === module) {
   (async () => {
     // Initialize Database
     await managerDb.initialize();
-
-    // Initialize Google Chat Client (restores tokens from Redis/Env)
-    try {
-      await googleChatService.startTokenRefreshManager();
-    } catch (error) {
-      logger.error('Failed to initialize Google Chat Service', 'App', error);
-    }
-
-    // Check and refresh tokens before starting the server, and start scheduler
-    googleChatService.startTokenRefreshManager();
 
     app.listen(config.port, () => {
       logger.info(`Server is running on port ${config.port}`, 'Server');

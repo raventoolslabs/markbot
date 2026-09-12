@@ -1,67 +1,49 @@
-import { logger } from '@/infrastructure/logging/logger';
-import { documentRepository } from '@/infrastructure/db/repositories/document.repository';
-import { documentChunkRepository } from '@/infrastructure/db/repositories/document-chunk.repository';
-import { documentChunkAssetRepository } from '@/infrastructure/db/repositories/documentchunk-asset.repository';
+import { config } from '@/app/config';
+import { Document } from '@/domain/entities/Document';
+import { DocumentChunk } from '@/domain/entities/DocumentChunk';
+import { pergamoDocumentRepository } from '@/infrastructure/pergamo/pergamo-document.repository';
 
-import { ProcessDocumentHandler } from '@/app/use-cases/document/commands/process-document.handler';
+import { UploadDocumentHandler } from '@/app/use-cases/document/commands/upload-document.handler';
 import { DeleteDocumentHandler } from '@/app/use-cases/document/commands/delete-document.handler';
-import { SearchDocumentsHandler } from '@/app/use-cases/document/queries/search-documents.handler';
 import { ListDocumentsHandler } from '@/app/use-cases/document/queries/list-documents.handler';
 import { GetDocumentHandler } from '@/app/use-cases/document/queries/get-document.handler';
 
-const processDocumentHandler = new ProcessDocumentHandler(documentRepository, documentChunkRepository, documentChunkAssetRepository);
-const deleteDocumentHandler = new DeleteDocumentHandler(documentRepository);
-const searchDocumentsHandler = new SearchDocumentsHandler(documentChunkRepository);
-const listDocumentsHandler = new ListDocumentsHandler(documentRepository);
-const getDocumentHandler = new GetDocumentHandler(documentRepository, documentChunkRepository);
+const uploadDocumentHandler = new UploadDocumentHandler(pergamoDocumentRepository);
+const deleteDocumentHandler = new DeleteDocumentHandler(pergamoDocumentRepository);
+const listDocumentsHandler = new ListDocumentsHandler(pergamoDocumentRepository);
+const getDocumentHandler = new GetDocumentHandler(pergamoDocumentRepository);
+
+// Forma que ya consume web/app/documents.
+const toDocumentResponse = (doc: Document) => ({
+  id: doc.id,
+  path: doc.originalName,
+  organization: config.pergamo.organization,
+  creationDate: doc.creationDate,
+  metadata: doc.metadata,
+});
+
+const toChunkResponse = (chunk: DocumentChunk) => ({
+  id: chunk.id,
+  content: chunk.content,
+  metadata: { page: chunk.page, section: chunk.section, chunk_size: chunk.length },
+});
 
 export class DocumentController {
-  constructor() { }
-
-  async processFile(buffer: Buffer, originalName: string, mimeType: string) {
-    try {
-      const result = await processDocumentHandler.execute({ buffer, originalName, mimeType });
-      return result;
-    } catch (error) {
-      logger.error(`Error processing file ${originalName}: ${error}`, 'DocumentController');
-      throw error;
-    }
-  }
-
-  async search(query: string, limit: number = 5) {
-    try {
-      return await searchDocumentsHandler.execute({ query, limit });
-    } catch (error) {
-      logger.error(`Error searching: ${error}`, 'DocumentController');
-      throw error;
-    }
+  async uploadDocument(buffer: Buffer, originalName: string, mimeType: string) {
+    return toDocumentResponse(await uploadDocumentHandler.execute({ buffer, originalName, mimeType }));
   }
 
   async listDocuments() {
-    try {
-      return await listDocumentsHandler.execute({});
-    } catch (error) {
-      logger.error(`Error listing documents: ${error}`, 'DocumentController');
-      throw error;
-    }
+    return (await listDocumentsHandler.execute({})).map(toDocumentResponse);
   }
 
   async getDocument(id: string) {
-    try {
-      return await getDocumentHandler.execute({ id });
-    } catch (error) {
-      logger.error(`Error getting document ${id}: ${error}`, 'DocumentController');
-      throw error;
-    }
+    const doc = await getDocumentHandler.execute({ id });
+    return doc && { ...toDocumentResponse(doc), chunks: doc.chunks.map(toChunkResponse) };
   }
 
   async deleteDocument(id: string) {
-    try {
-      await deleteDocumentHandler.execute({ id });
-    } catch (error) {
-      logger.error(`Error deleting document ${id}: ${error}`, 'DocumentController');
-      throw error;
-    }
+    await deleteDocumentHandler.execute({ id });
   }
 }
 

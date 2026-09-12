@@ -50,6 +50,8 @@ export class PgUserRepository implements UserRepository {
         if (data.twoFactorEnabled !== undefined) updateData.two_factor_enabled = data.twoFactorEnabled;
         if (data.twoFactorEnrolledAt !== undefined) updateData.two_factor_enrolled_at = data.twoFactorEnrolledAt;
         if (data.twoFactorSecret !== undefined) updateData.two_factor_secret = data.twoFactorSecret;
+        // init.sql no tiene email_verified: la verificación se guarda como fecha en verified_at.
+        if (data.emailVerified !== undefined) updateData.verified_at = data.emailVerified ? new Date() : null;
         if (data.verifiedAt !== undefined) updateData.verified_at = data.verifiedAt;
 
         await managerDb.db
