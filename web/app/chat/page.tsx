@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Header } from '@/components/Header';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { MinimizeIcon, MaximizeIcon, XIcon, InfoIcon, SendIcon } from '@/components/Icons';
 import { config } from '@/config';
 
@@ -28,6 +29,7 @@ type SelectedImage = {
 
 function ChatContent() {
     const { t } = useLanguage();
+    const { authFetch } = useAuth();
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
@@ -41,6 +43,7 @@ function ChatContent() {
     const isEmbed = searchParams.get('embed') === '1';
     const widgetToken = searchParams.get('token');
     const [isTokenValid, setIsTokenValid] = useState<boolean | null>(isEmbed ? null : true);
+    const [widgetSessionToken, setWidgetSessionToken] = useState<string | null>(null);
     const [widgetTheme, setWidgetTheme] = useState(searchParams.get('theme') || 'light');
     // State for full screen
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -62,6 +65,7 @@ function ChatContent() {
                     });
                     const data = await res.json();
                     if (data.valid) {
+                        setWidgetSessionToken(data.session_token);
                         setIsTokenValid(true);
                         // Notify parent that widget is ready
                         window.parent.postMessage({ type: 'widget:ready' }, '*');
@@ -132,11 +136,20 @@ function ChatContent() {
         setIsLoading(true);
 
         try {
-            const res = await fetch('/api/chat/message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: content }),
-            });
+            const res = isEmbed
+                ? await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(widgetSessionToken ? { Authorization: `Bearer ${widgetSessionToken}` } : {}),
+                    },
+                    body: JSON.stringify({ message: content }),
+                })
+                : await authFetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: content }),
+                });
             const data = await res.json();
 
             // Handle metadata if present (compatible with new messageHandler response)
@@ -175,7 +188,7 @@ function ChatContent() {
     if (isEmbed && isTokenValid === null) {
         return (
             <div className="flex items-center justify-center h-screen bg-white">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
             </div>
         );
     }
@@ -189,7 +202,7 @@ function ChatContent() {
     };
 
     return (
-        <div className={`flex flex-col h-screen transition-colors duration-300 overflow-hidden relative ${isEmbed ? 'bg-white' : 'bg-gray-50 dark:bg-gray-950'}`}>
+        <div className={`flex flex-col h-screen transition-colors duration-300 overflow-hidden relative ${isEmbed ? 'bg-white' : 'bg-canvas'}`}>
             {!isEmbed && <Header />}
 
             {/* Embed Close Button Header */}
@@ -216,7 +229,7 @@ function ChatContent() {
                 </div>
             )}
 
-            <main ref={mainRef} className={`flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 w-full pb-8 scroll-smooth ${isEmbed ? 'bg-white' : 'max-w-5xl mx-auto bg-emerald-50/20 dark:bg-transparent'}`}>
+            <main ref={mainRef} className={`flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col gap-6 w-full pb-8 scroll-smooth ${isEmbed ? 'bg-white' : 'max-w-5xl mx-auto bg-brand/10/20 dark:bg-transparent'}`}>
                 {/* Logo and Welcome for Embed */}
                 {messages.length === 0 && (
                     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in zoom-in duration-500 mt-10">
@@ -234,8 +247,8 @@ function ChatContent() {
                         )}
 
                         <div className={`max-w-[80%] p-4 shadow-sm ${msg.role === 'user'
-                            ? 'bg-emerald-800 text-white rounded-2xl rounded-tr-sm'
-                            : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-2xl rounded-tl-sm border border-emerald-100 dark:border-gray-800'
+                            ? 'bg-brand text-brand-ink rounded-2xl rounded-tr-sm'
+                            : 'bg-surface text-ink rounded-2xl rounded-tl-sm border border-line'
                             }`}>
                             {msg.role === 'bot' ? (
                                 <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:mt-3 prose-headings:mb-2 prose-li:my-0.5">
@@ -248,10 +261,10 @@ function ChatContent() {
                                                 if (imgData) {
                                                     const imgSrc = `data:${imgData.mimeType};base64,${imgData.data}`;
                                                     return (
-                                                        <div className="my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col items-center group">
+                                                        <div className="my-4 rounded-lg overflow-hidden border border-line bg-surface-2 flex flex-col items-center group">
                                                             <div
                                                                 onClick={() => setSelectedImage({ src: imgSrc, alt: imgData.name })}
-                                                                className="cursor-zoom-in w-full flex justify-center p-4 bg-gray-50/50 dark:bg-gray-900/50 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                                className="cursor-zoom-in w-full flex justify-center p-4 bg-surface-2/50 transition-colors hover:bg-surface-2"
                                                                 title={`Click to enlarge ${imgData.name}`}
                                                             >
                                                                 <img
@@ -261,7 +274,7 @@ function ChatContent() {
                                                                     loading="lazy"
                                                                 />
                                                             </div>
-                                                            <div className="w-full px-2 py-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 text-center font-medium truncate flex items-center justify-center gap-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                                            <div className="w-full px-2 py-1.5 text-xs text-ink-mute bg-surface-2 border-t border-line text-center font-medium truncate flex items-center justify-center gap-1 group-hover:text-brand transition-colors">
                                                                 <MaximizeIcon width="12" height="12" />
                                                                 {imgData.name}
                                                             </div>
@@ -279,14 +292,14 @@ function ChatContent() {
                                     {msg.sources && msg.sources.length > 0 && (
                                         <div className="mt-2 flex justify-end">
                                             <div className="relative group inline-block">
-                                                <InfoIcon className="w-5 h-5 text-gray-400 hover:text-emerald-500 cursor-help transition-colors" />
+                                                <InfoIcon className="w-5 h-5 text-ink-mute hover:text-brand cursor-help transition-colors" />
 
                                                 <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-80 sm:w-96 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl z-10 before:content-[''] before:absolute before:top-full before:right-2 before:border-4 before:border-transparent before:border-t-gray-900 pointer-events-none">
                                                     <div className="font-semibold mb-1 border-b border-gray-700 pb-1">Fuentes consultadas:</div>
                                                     <ul className="space-y-1.5 pr-1 mt-1.5">
                                                         {msg.sources.map((src: any, srcIdx: number) => (
                                                             <li key={srcIdx} className="break-words">
-                                                                <span className="font-medium text-emerald-400">{src.document}</span>
+                                                                <span className="font-medium text-brand">{src.document}</span>
                                                                 <br />
                                                                 <span className="opacity-80 text-[10px] uppercase">Sección: {src.section}</span>
                                                             </li>
@@ -303,8 +316,8 @@ function ChatContent() {
                         </div>
 
                         {msg.role === 'user' && (
-                            <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-gray-700 flex items-center justify-center shrink-0 shadow-sm border border-emerald-200 dark:border-gray-600">
-                                <span className="text-sm font-bold text-emerald-800 dark:text-gray-300">YO</span>
+                            <div className="w-12 h-12 rounded-full bg-surface-2 flex items-center justify-center shrink-0 shadow-sm border border-line">
+                                <span className="text-sm font-bold text-brand">YO</span>
                             </div>
                         )}
                     </div>
@@ -313,11 +326,11 @@ function ChatContent() {
                 {isLoading && (
                     <div className="flex gap-4 justify-start animate-pulse">
                         <Image src="/img/logo-without-title.png" alt="Bot" width={48} height={48} className="object-contain w-12 h-12 shrink-0" />
-                        <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl rounded-tl-sm border border-emerald-100 dark:border-gray-800">
+                        <div className="bg-surface p-4 rounded-2xl rounded-tl-sm border border-line">
                             <span className="flex gap-1.5 h-6 items-center">
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"></span>
+                                <span className="w-2 h-2 bg-brand rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                <span className="w-2 h-2 bg-brand rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                <span className="w-2 h-2 bg-brand rounded-full animate-bounce"></span>
                             </span>
                         </div>
                     </div>
@@ -352,16 +365,16 @@ function ChatContent() {
                 </div>
             )}
 
-            <div className="p-4 bg-emerald-50/30 dark:bg-gray-950 z-10 transition-colors">
+            <div className="p-4 bg-canvas z-10 transition-colors">
                 <form onSubmit={sendMessage} className="max-w-5xl mx-auto">
-                    <div className="flex items-end gap-2 bg-white dark:bg-gray-900 rounded-2xl border border-emerald-100 dark:border-gray-700 p-2 focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-all shadow-md">
+                    <div className="flex items-end gap-2 bg-surface rounded-2xl border border-line p-2 focus-within:ring-2 focus-within:ring-brand/50 focus-within:border-brand transition-all shadow-md">
                         <textarea
                             ref={textareaRef}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder={t.chat.placeholder}
-                            className="flex-1 p-2 bg-transparent text-gray-800 dark:text-white focus:outline-none resize-none min-h-[40px] max-h-[200px] overflow-y-auto custom-scrollbar"
+                            className="flex-1 p-2 bg-transparent text-ink focus:outline-none resize-none min-h-[40px] max-h-[200px] overflow-y-auto custom-scrollbar"
                             style={{
                                 height: 'auto'
                             }}
@@ -371,13 +384,13 @@ function ChatContent() {
                         <button
                             type="submit"
                             disabled={isLoading || !input.trim()}
-                            className="bg-emerald-800 hover:bg-emerald-700 text-white p-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all aspect-square flex items-center justify-center shadow-md shrink-0"
+                            className="bg-brand hover:bg-brand-deep text-brand-ink p-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all aspect-square flex items-center justify-center shadow-md shrink-0"
                         >
                             <SendIcon />
                         </button>
                     </div>
                     {!isEmbed && (
-                        <div className="text-center mt-2 text-[10px] uppercase tracking-widest font-bold text-emerald-700/50 dark:text-gray-600">
+                        <div className="text-center mt-2 text-[10px] uppercase tracking-widest font-bold text-ink-mute">
                             {config.botName}bot can make mistakes. Consider checking important information.
                         </div>
                     )}
@@ -389,7 +402,7 @@ function ChatContent() {
 
 export default function ChatPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center h-screen bg-white"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen bg-white"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div></div>}>
             <ChatContent />
         </Suspense>
     );

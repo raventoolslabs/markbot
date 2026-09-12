@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { chatController } from '@/api/http/controllers/chat.controller';
+import { chatAuthenticationMiddleware } from '@/api/http/middlewares/chat-authentication.middleware';
 
 const router = Router();
 
@@ -46,7 +47,7 @@ const router = Router();
  *                 metadata:
  *                   type: object
  */
-router.post('/message', async (req: Request, res: Response) => {
+router.post('/message', chatAuthenticationMiddleware, async (req: Request, res: Response) => {
   try {
     const { message, userName, userId } = req.body;
 
