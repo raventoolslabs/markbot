@@ -90,30 +90,30 @@ export default function EmbeddedChatPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+        <div className="flex flex-col min-h-screen bg-canvas transition-colors duration-300">
             <Header />
 
             <main className="flex-grow container mx-auto px-4 py-12 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto space-y-8">
 
                     <div className="text-center space-y-4">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Embed {config.botName}bot</h1>
-                        <p className="text-lg text-gray-600 dark:text-gray-300">
+                        <h1 className="text-3xl font-bold text-ink">Embed {config.botName}bot</h1>
+                        <p className="text-lg text-ink-mute">
                             Generate a secure code snippet to add {config.botName}bot to any website.
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div className="bg-surface rounded-xl shadow-md border border-line overflow-hidden">
                         <div className="p-6 sm:p-8 space-y-6">
 
                             {/* Step 1 */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm">1</div>
-                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Enter your API Key</h2>
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand/15 dark:bg-brand/15 text-brand font-bold text-sm">1</div>
+                                    <h2 className="text-lg font-semibold text-ink">Enter your API Key</h2>
                                 </div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 ml-11">
-                                    You can copy this from your <a href="/profile" className="text-emerald-600 hover:text-emerald-500 underline">Profile</a>.
+                                <p className="text-sm text-ink-mute ml-11">
+                                    You can copy this from your <a href="/profile" className="text-brand hover:text-brand underline">Profile</a>.
                                     This is used here only to simulate the server-side token generation.
                                 </p>
                                 <div className="ml-11">
@@ -122,7 +122,7 @@ export default function EmbeddedChatPage() {
                                         value={apiKey}
                                         onChange={(e) => setApiKey(e.target.value)}
                                         placeholder="mk_..."
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-900 dark:text-white font-mono text-sm"
+                                        className="w-full px-4 py-3 bg-surface-2 border border-line rounded-lg focus:ring-2 focus:ring-brand focus:border-brand transition-all text-ink font-mono text-sm"
                                     />
                                     {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
                                 </div>
@@ -133,7 +133,7 @@ export default function EmbeddedChatPage() {
                                 <button
                                     onClick={generateAndEmbed}
                                     disabled={isLoading || !apiKey}
-                                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="px-6 py-2.5 bg-brand hover:bg-brand-deep text-brand-ink rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
                                     {isLoading ? (
                                         <>
@@ -148,12 +148,12 @@ export default function EmbeddedChatPage() {
 
                             {/* Step 2: Result */}
                             {generatedCode && (
-                                <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="space-y-4 pt-6 border-t border-line animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold text-sm">2</div>
-                                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Copy & Paste</h2>
+                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand/15 dark:bg-brand/15 text-brand font-bold text-sm">2</div>
+                                        <h2 className="text-lg font-semibold text-ink">Copy & Paste</h2>
                                     </div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 ml-11">
+                                    <p className="text-sm text-ink-mute ml-11">
                                         Place this code snippet before the closing <code>&lt;/body&gt;</code> tag of your website.
                                     </p>
                                     <div className="ml-11 relative group">
@@ -170,7 +170,7 @@ export default function EmbeddedChatPage() {
                                         </pre>
                                     </div>
 
-                                    <div className="ml-11 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg border border-emerald-100 dark:border-emerald-800 flex gap-3 text-sm text-emerald-800 dark:text-emerald-200">
+                                    <div className="ml-11 bg-brand/10 p-4 rounded-lg border border-brand/20 flex gap-3 text-sm text-brand">
                                         <CheckCircleSolidIcon className="h-5 w-5 shrink-0" />
                                         <div>
                                             <strong>Widget Preview Active!</strong><br />

@@ -26,13 +26,13 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-100 dark:border-gray-700 transform transition-all">
+            <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full p-6 border border-line transform transition-all">
                 <div className="flex items-center gap-3 mb-4 text-red-600 dark:text-red-400">
                     <WarningIcon className="w-6 h-6" />
                     <h3 className="text-lg font-bold">{title}</h3>
                 </div>
 
-                <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                <p className="text-ink-mute mb-8 leading-relaxed">
                     {message}
                 </p>
 

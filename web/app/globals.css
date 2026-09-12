@@ -3,22 +3,80 @@
 
 @variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #065f46;
-  --secondary: #a3e635;
+/* Tokens semánticos: evitan tener que duplicar cada color con su variante dark:. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-ink: var(--brand-ink);
+
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
 }
 
+/* Paleta clara, derivada del verde del mockup. */
+:root {
+  --canvas: #f6f9f7;
+  --surface: #ffffff;
+  --surface-2: #f0f5f2;
+  --line: #dde7e1;
+  --line-soft: #e6ede9;
+  --ink: #0f1a14;
+  --ink-soft: #33463c;
+  --ink-mute: #5c6f65;
+  --brand: #1f9e5e;
+  --brand-deep: #0f5f3c;
+  --brand-ink: #04180e;
+}
+
+/* Paleta oscura, tal cual el mockup de login. */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --primary: #065f46;
-  --secondary: #a3e635;
+  --canvas: #0b0f0d;
+  --surface: #101a15;
+  --surface-2: #16241d;
+  --line: #26362e;
+  --line-soft: #21302a;
+  --ink: #e8f0ec;
+  --ink-soft: #c3d2ca;
+  --ink-mute: #93a49b;
+  --brand: #34d17a;
+  --brand-deep: #0f5f3c;
+  --brand-ink: #04180e;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--line);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--ink-mute);
+  }
+}
+
+/* Logo flotante del panel de login. */
+@keyframes mbFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }

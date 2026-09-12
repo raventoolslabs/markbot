@@ -28,7 +28,7 @@ export const Avatar: React.FC<AvatarProps> = ({ src, alt, name, className = "", 
     if (!imgSrc || hasError) {
         return (
             <div
-                className={`flex items-center justify-center bg-emerald-200 text-emerald-700 font-bold uppercase select-none ${className}`}
+                className={`flex items-center justify-center bg-brand/20 text-brand font-bold uppercase select-none ${className}`}
                 title={alt}
             >
                 {getInitials(name)}

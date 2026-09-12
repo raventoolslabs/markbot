@@ -24,19 +24,19 @@ export const HomeContent = () => {
                 </div>
 
                 <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
-                    <span className="text-emerald-800 dark:text-emerald-400">
+                    <span className="text-brand">
                         {t.home.welcome}
                     </span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl leading-relaxed">
+                <p className="text-lg sm:text-xl text-ink-mute max-w-2xl leading-relaxed">
                     {t.home.subDescription}
                 </p>
 
                 <div className="flex gap-4 mt-4">
                     <Link
                         href="/chat"
-                        className="group relative px-8 py-4 bg-emerald-800 hover:bg-emerald-700 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                        className="group relative px-8 py-4 bg-brand hover:bg-brand-deep text-brand-ink rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                     >
                         {t.chat.start}
                         <span className="absolute inset-0 rounded-full ring-2 ring-white/10 group-hover:ring-white/20 animate-pulse"></span>
