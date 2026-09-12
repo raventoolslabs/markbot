@@ -1,12 +1,11 @@
 # Markbot
 
-Bot diseñado para interactuar con un proyecto de Markdown y Google Chat. 
+Bot diseñado para interactuar con un proyecto de Markdown.
 Este proyecto consiste en un backend desarrollado en Node.js/Express y un frontend en Next.js.
 
 ## Características
-- **Backend**: API REST en Express.js con integración para Google Chat.
+- **Backend**: API REST en Express.js.
 - **Frontend**: Aplicación Next.js para la página de inicio.
-- **Integración**: Configurado para desarrollo con `bocaltunnel` (via `lt`) para exponer el servidor localmente a Google Chat.
 
 ## Requisitos previos
 - Node.js (v18 o superior recomendado)
@@ -26,21 +25,18 @@ Este proyecto consiste en un backend desarrollado en Node.js/Express y un fronte
    ```
    Variables clave:
    - `PORT`: Puerto del backend (6240).
-   - `APP_HOST`: URL base para callbacks (ej. `https://tu-tunnel.loca.lt`).
-   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: Credenciales OAuth2.
-   - `SPACE_ID`: ID del espacio de Google Chat.
+   - `GOOGLE_CLIENT_ID`: Client ID de OAuth2, para el login de usuarios con Google.
 
 ## Comandos
 
 ### Desarrollo
-Para arrancar el entorno de desarrollo completo (Backend, Frontend y Tunnel):
+Para arrancar el entorno de desarrollo completo (Backend y Frontend):
 ```bash
 npm run dev
 ```
 Esto iniciará:
 - Backend en puerto 6240 (reinicio automático con nodemon).
 - Frontend en puerto 6241, publicado en `https://markbot.raventools.labs` por el proxy.
-- Túnel local exponiendo el puerto 6240 a internet.
 
 ### Producción
 Para compilar y arrancar en modo producción:
@@ -59,7 +55,9 @@ npm test
 
 ## Estructura del Proyecto
 - `/src`: Código fuente del backend (Express).
-  - `/modules`: Módulos de la aplicación (ej. Google Chat).
-  - `/routes`: Definición de rutas base.
+  - `/api`: Capa HTTP: rutas, controladores y middlewares.
+  - `/app`: Casos de uso y configuración.
+  - `/domain`: Entidades y excepciones.
+  - `/infrastructure`: Base de datos, colas y servicios externos.
 - `/web`: Código fuente del frontend (Next.js).
 - `/tests`: Tests con Jest y Supertest.

@@ -44,7 +44,7 @@ claves de traducción, logs, mensajes de error internos, commits y PR.
 
 La interfaz web no lleva literales en el JSX: el texto vive en
 `web/utils/translations/{es,en}.ts`, con **clave en inglés**. Las respuestas del
-bot al usuario final (chat, Google Chat) se escriben en español.
+bot al usuario final (chat) se escriben en español.
 
 ### Los comentarios, en español y breves
 

@@ -14,8 +14,9 @@ services:
     environment:
       - PORT=6240
       - NODE_ENV=production
-      # Redis compartido: la cola usa bull:token-refresh, el mismo que markbot en
-      # desarrollo, así que no deben correr los dos a la vez contra él.
+      # Redis compartido: la cola token-refresh se quedó sin consumidor al
+      # retirar Google Chat, así que hoy no se abre ninguna conexión. Se mantiene
+      # por si vuelve a hacer falta una cola.
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB}?schema=markbot
@@ -30,8 +31,6 @@ services:
       - PERGAMO_ORGANIZATION
       - PERGAMO_PASSWORD
       - GOOGLE_CLIENT_ID
-      - GOOGLE_CLIENT_SECRET
-      - GOOGLE_CLIENT_SCOPE
       - SMTP_HOST
       - SMTP_PORT
       - SMTP_USER

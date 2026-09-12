@@ -23,7 +23,6 @@ const options: swaggerJSDoc.Options = {
     tags: [
       { name: 'General', description: 'General API endpoints' },
       { name: 'Chat', description: 'Chat interaction endpoints' },
-      { name: 'Google', description: 'Google Workspace integration endpoints' },
     ],
   },
   apis: process.env.NODE_ENV === 'production'

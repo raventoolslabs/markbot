@@ -4,13 +4,7 @@ dotenv.config();
 
 export const config = {
   port: process.env.PORT || 6240,
-  spaceId: process.env.SPACE_ID,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
-  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  googleClientScope: process.env.GOOGLE_CLIENT_SCOPE || 'https://www.googleapis.com/auth/chat.messages',
-  googleProjectNumber: process.env.GOOGLE_PROJECT_NUMBER,
-  appHost: process.env.APP_HOST || `http://localhost:${process.env.PORT || 6240}`,
-  googleClientToken: process.env.GOOGLE_CLIENT_TOKEN,
   jwtSecret: process.env.JWT_SECRET,
   encryptionKey: process.env.ENCRYPTION_KEY,
   redisHost: process.env.REDIS_HOST || 'localhost',
