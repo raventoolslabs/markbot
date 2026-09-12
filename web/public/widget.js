@@ -49,7 +49,7 @@
         width: 60px;
         height: 60px;
         border-radius: 30px;
-        background-color: #059669; /* Emerald 600 */
+        background-color: #1f9e5e; /* Verde de marca */
         color: white;
         display: flex;
         align-items: center;

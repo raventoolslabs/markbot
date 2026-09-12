@@ -15,7 +15,7 @@ interface ApiKey {
 }
 
 export const ApiKeyManager = () => {
-    const { token } = useAuth();
+    const { token, authFetch } = useAuth();
     const [keys, setKeys] = useState<ApiKey[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -31,9 +31,7 @@ export const ApiKeyManager = () => {
     const fetchKeys = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/keys', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await authFetch('/api/keys');
             if (res.ok) {
                 const data = await res.json();
                 setKeys(data);
@@ -48,12 +46,9 @@ export const ApiKeyManager = () => {
     const handleCreateKey = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await fetch('/api/keys', {
+            const res = await authFetch('/api/keys', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newKeyData)
             });
 
@@ -73,9 +68,8 @@ export const ApiKeyManager = () => {
         if (!confirm('Are you sure you want to delete this API Key? This action cannot be undone.')) return;
 
         try {
-            const res = await fetch(`/api/keys/${id}`, {
+            const res = await authFetch(`/api/keys/${id}`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.ok) {
@@ -87,12 +81,12 @@ export const ApiKeyManager = () => {
     };
 
     return (
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">API Keys</h2>
+        <div className="mt-8 bg-surface rounded-xl shadow-sm border border-line overflow-hidden">
+            <div className="p-6 border-b border-line flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-ink">API Keys</h2>
                 <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="px-4 py-2 bg-brand hover:bg-brand-deep text-brand-ink rounded-lg text-sm font-medium transition-colors"
                 >
                     Generate New Key
                 </button>
@@ -101,35 +95,35 @@ export const ApiKeyManager = () => {
             <div className="p-6">
                 {loading ? (
                     <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
                     </div>
                 ) : keys.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className="text-center py-8 text-ink-mute">
                         No API keys found. Generate one to get started.
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <table className="min-w-full divide-y divide-line">
                             <thead>
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prefix</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Domain</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expiration</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">Name</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">Prefix</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">Domain</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">Expiration</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-ink-mute uppercase tracking-wider">Created</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-ink-mute uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-line">
                                 {keys.map(key => (
                                     <tr key={key.id}>
-                                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{key.name}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">{key.prefix}...</td>
-                                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{key.domain || '-'}</td>
-                                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                        <td className="px-4 py-3 text-sm text-ink font-medium">{key.name}</td>
+                                        <td className="px-4 py-3 text-sm text-ink-mute font-mono">{key.prefix}...</td>
+                                        <td className="px-4 py-3 text-sm text-ink-mute">{key.domain || '-'}</td>
+                                        <td className="px-4 py-3 text-sm text-ink-mute">
                                             {key.expirationDate ? format(new Date(key.expirationDate), 'MMM d, yyyy') : 'Never'}
                                         </td>
-                                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                        <td className="px-4 py-3 text-sm text-ink-mute">
                                             {format(new Date(key.createdAt), 'MMM d, yyyy')}
                                         </td>
                                         <td className="px-4 py-3 text-right text-sm font-medium">
@@ -151,20 +145,20 @@ export const ApiKeyManager = () => {
             {/* Create / Result Modal */}
             {isCreateModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+                    <div className="bg-surface rounded-xl shadow-xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
                         {generatedKey ? (
                             <div className="space-y-4">
                                 <div className="text-center">
                                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
                                         <CheckStrokeIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
                                     </div>
-                                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">API Key Generated</h3>
-                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <h3 className="text-lg font-medium text-ink">API Key Generated</h3>
+                                    <p className="mt-2 text-sm text-ink-mute">
                                         Please copy your API key now. You won't be able to see it again!
                                     </p>
                                 </div>
-                                <div className="mt-4 bg-gray-50 dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
-                                    <code className="text-emerald-600 dark:text-emerald-400 font-mono text-sm break-all">{generatedKey}</code>
+                                <div className="mt-4 bg-surface-2 p-4 rounded-lg border border-line flex items-center justify-between gap-2">
+                                    <code className="text-brand font-mono text-sm break-all">{generatedKey}</code>
                                     <button
                                         onClick={() => navigator.clipboard.writeText(generatedKey)}
                                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1"
@@ -178,41 +172,41 @@ export const ApiKeyManager = () => {
                                         setGeneratedKey(null);
                                         setIsCreateModalOpen(false);
                                     }}
-                                    className="w-full mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="w-full mt-4 px-4 py-2 bg-brand hover:bg-brand-deep text-brand-ink rounded-lg text-sm font-medium transition-colors"
                                 >
                                     Done
                                 </button>
                             </div>
                         ) : (
                             <form onSubmit={handleCreateKey} className="space-y-4">
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Create API Key</h3>
+                                <h3 className="text-lg font-medium text-ink mb-4">Create API Key</h3>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                                    <label className="block text-sm font-medium text-ink-soft mb-1">Name</label>
                                     <input
                                         type="text"
                                         required
                                         value={newKeyData.name}
                                         onChange={e => setNewKeyData({ ...newKeyData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-brand focus:border-brand bg-surface text-ink"
                                         placeholder="My App Key"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiration Date (Optional)</label>
+                                    <label className="block text-sm font-medium text-ink-soft mb-1">Expiration Date (Optional)</label>
                                     <input
                                         type="date"
                                         value={newKeyData.expirationDate}
                                         onChange={e => setNewKeyData({ ...newKeyData, expirationDate: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-brand focus:border-brand bg-surface text-ink"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Domain Restriction (Optional)</label>
+                                    <label className="block text-sm font-medium text-ink-soft mb-1">Domain Restriction (Optional)</label>
                                     <input
                                         type="text"
                                         value={newKeyData.domain}
                                         onChange={e => setNewKeyData({ ...newKeyData, domain: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-brand focus:border-brand bg-surface text-ink"
                                         placeholder="example.com"
                                     />
                                 </div>
@@ -220,13 +214,13 @@ export const ApiKeyManager = () => {
                                     <button
                                         type="button"
                                         onClick={() => setIsCreateModalOpen(false)}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        className="px-4 py-2 text-sm font-medium text-ink-soft hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                        className="px-4 py-2 bg-brand hover:bg-brand-deep text-brand-ink rounded-lg text-sm font-medium transition-colors"
                                     >
                                         Create Key
                                     </button>
